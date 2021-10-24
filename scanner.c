@@ -61,6 +61,32 @@ static void scanner_add_token(struct scanner *scanner,
 	scanner_add_token_with_literal(scanner, token_type, null_obj);
 }
 
+static void scanner_scan_string(struct scanner *scanner,
+				struct lox_state *lox_state)
+{
+	while (scanner_peek(scanner) != '"' && !scanner_is_at_end(scanner)) {
+		if (scanner_peek(scanner) == '\n') {
+			++scanner->line;
+		}
+		scanner_advance(scanner);
+	}
+
+	if (scanner_is_at_end(scanner)) {
+		lox_error(lox_state, scanner->line, "Unterminated string.");
+		return;
+	}
+
+	scanner_advance(scanner);
+
+	size_t valuelen = scanner->current - scanner->start - 2;
+	char *value = malloc(valuelen + 1);
+	strncpy(value, &scanner->source[scanner->start + 1], valuelen);
+	value[valuelen] = '\0';
+	struct object string_obj;
+	object_init_string(&string_obj, value);
+	scanner_add_token_with_literal(scanner, token_string, string_obj);
+}
+
 static void scanner_scan_token(struct scanner *scanner,
 			       struct lox_state *lox_state)
 {
@@ -140,6 +166,9 @@ static void scanner_scan_token(struct scanner *scanner,
 		break;
 	case '\n':
 		++scanner->line;
+		break;
+	case '"':
+		scanner_scan_string(scanner, lox_state);
 		break;
 	default:
 		lox_error(lox_state, scanner->line, "Unexpected character.");

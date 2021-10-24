@@ -29,6 +29,7 @@ void token_list_deinit(struct token_list *token_list)
 {
 	for (size_t i = 0; i < token_list->count; ++i) {
 		free(token_list->data[i].lexeme);
+		object_deinit(&token_list->data[i].literal);
 	}
 	free(token_list->data);
 }
