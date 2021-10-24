@@ -10,6 +10,14 @@ static bool scanner_is_at_end(struct scanner *scanner)
 	return scanner->current >= scanner->source_length;
 }
 
+static char scanner_peek(struct scanner *scanner)
+{
+	if (scanner_is_at_end(scanner)) {
+		return '\0';
+	}
+	return scanner->source[scanner->current];
+}
+
 static char scanner_advance(struct scanner *scanner)
 {
 	char advanced = scanner->source[scanner->current];
@@ -115,6 +123,23 @@ static void scanner_scan_token(struct scanner *scanner,
 		} else {
 			scanner_add_token(scanner, token_greater);
 		}
+		break;
+	case '/':
+		if (scanner_match(scanner, '/')) {
+			while (scanner_peek(scanner) != '\n' &&
+			       !scanner_is_at_end(scanner)) {
+				scanner_advance(scanner);
+			}
+		} else {
+			scanner_add_token(scanner, token_slash);
+		}
+		break;
+	case ' ':
+	case '\r':
+	case '\t':
+		break;
+	case '\n':
+		++scanner->line;
 		break;
 	default:
 		lox_error(lox_state, scanner->line, "Unexpected character.");
