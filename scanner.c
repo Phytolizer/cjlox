@@ -5,6 +5,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+static bool is_digit(char c)
+{
+	return c >= '0' && c <= '9';
+}
+
 static bool scanner_is_at_end(struct scanner *scanner)
 {
 	return scanner->current >= scanner->source_length;
@@ -16,6 +21,14 @@ static char scanner_peek(struct scanner *scanner)
 		return '\0';
 	}
 	return scanner->source[scanner->current];
+}
+
+static char scanner_peek_next(struct scanner *scanner)
+{
+	if (scanner->current + 1 >= scanner->source_length) {
+		return '\0';
+	}
+	return scanner->source[scanner->current + 1];
 }
 
 static char scanner_advance(struct scanner *scanner)
@@ -85,6 +98,26 @@ static void scanner_scan_string(struct scanner *scanner,
 	struct object string_obj;
 	object_init_string(&string_obj, value);
 	scanner_add_token_with_literal(scanner, token_string, string_obj);
+}
+
+static void scanner_scan_number(struct scanner *scanner)
+{
+	while (is_digit(scanner_peek(scanner))) {
+		scanner_advance(scanner);
+	}
+	if (scanner_peek(scanner) == '.' &&
+	    is_digit(scanner_peek_next(scanner))) {
+		scanner_advance(scanner);
+
+		while (is_digit(scanner_peek(scanner))) {
+			scanner_advance(scanner);
+		}
+	}
+
+	struct object value_obj;
+	object_init_float64(&value_obj,
+			    strtod(&scanner->source[scanner->start], NULL));
+	scanner_add_token_with_literal(scanner, token_number, value_obj);
 }
 
 static void scanner_scan_token(struct scanner *scanner,
@@ -171,7 +204,12 @@ static void scanner_scan_token(struct scanner *scanner,
 		scanner_scan_string(scanner, lox_state);
 		break;
 	default:
-		lox_error(lox_state, scanner->line, "Unexpected character.");
+		if (is_digit(c)) {
+			scanner_scan_number(scanner);
+		} else {
+			lox_error(lox_state, scanner->line,
+				  "Unexpected character.");
+		}
 		break;
 	}
 }

@@ -8,10 +8,10 @@ void object_init_null(struct object *object)
 	object->type = object_null;
 }
 
-void object_init_int32(struct object *object, int32_t value)
+void object_init_float64(struct object *object, double value)
 {
-	object->type = object_int32;
-	object->as.int32 = value;
+	object->type = object_float64;
+	object->as.float64 = value;
 }
 
 void object_init_string(struct object *object, char *value)
@@ -24,7 +24,7 @@ void object_deinit(struct object *object)
 {
 	switch (object->type) {
 	case object_null:
-	case object_int32:
+	case object_float64:
 		break;
 	case object_string:
 		free(object->as.string);
@@ -36,8 +36,8 @@ void object_print(struct object *object)
 	switch (object->type) {
 	case object_null:
 		break;
-	case object_int32:
-		printf("%d", object->as.int32);
+	case object_float64:
+		printf("%lf", object->as.float64);
 		break;
 	case object_string:
 		printf("%s", object->as.string);
