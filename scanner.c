@@ -5,9 +5,19 @@
 #include <stdlib.h>
 #include <string.h>
 
+static bool is_alpha(char c)
+{
+	return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
+}
+
 static bool is_digit(char c)
 {
 	return c >= '0' && c <= '9';
+}
+
+static bool is_alpha_numeric(char c)
+{
+	return is_alpha(c) || is_digit(c);
 }
 
 static bool scanner_is_at_end(struct scanner *scanner)
@@ -120,6 +130,15 @@ static void scanner_scan_number(struct scanner *scanner)
 	scanner_add_token_with_literal(scanner, token_number, value_obj);
 }
 
+static void scanner_scan_identifier(struct scanner *scanner)
+{
+	while (is_alpha_numeric(scanner_peek(scanner))) {
+		scanner_advance(scanner);
+	}
+
+	scanner_add_token(scanner, token_identifier);
+}
+
 static void scanner_scan_token(struct scanner *scanner,
 			       struct lox_state *lox_state)
 {
@@ -206,6 +225,8 @@ static void scanner_scan_token(struct scanner *scanner,
 	default:
 		if (is_digit(c)) {
 			scanner_scan_number(scanner);
+		} else if (is_alpha(c)) {
+			scanner_scan_identifier(scanner);
 		} else {
 			lox_error(lox_state, scanner->line,
 				  "Unexpected character.");
