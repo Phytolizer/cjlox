@@ -17,6 +17,18 @@ static char scanner_advance(struct scanner *scanner)
 	return advanced;
 }
 
+static bool scanner_match(struct scanner *scanner, char expected)
+{
+	if (scanner_is_at_end(scanner)) {
+		return false;
+	}
+	if (scanner->source[scanner->current] != expected) {
+		return false;
+	}
+	++scanner->current;
+	return true;
+}
+
 static void scanner_add_token_with_literal(struct scanner *scanner,
 					   enum token_type token_type,
 					   struct object literal)
@@ -75,6 +87,34 @@ static void scanner_scan_token(struct scanner *scanner,
 		break;
 	case '*':
 		scanner_add_token(scanner, token_star);
+		break;
+	case '!':
+		if (scanner_match(scanner, '=')) {
+			scanner_add_token(scanner, token_bang_equal);
+		} else {
+			scanner_add_token(scanner, token_bang);
+		}
+		break;
+	case '=':
+		if (scanner_match(scanner, '=')) {
+			scanner_add_token(scanner, token_equal_equal);
+		} else {
+			scanner_add_token(scanner, token_equal);
+		}
+		break;
+	case '<':
+		if (scanner_match(scanner, '=')) {
+			scanner_add_token(scanner, token_less_equal);
+		} else {
+			scanner_add_token(scanner, token_less);
+		}
+		break;
+	case '>':
+		if (scanner_match(scanner, '=')) {
+			scanner_add_token(scanner, token_greater_equal);
+		} else {
+			scanner_add_token(scanner, token_greater);
+		}
 		break;
 	default:
 		lox_error(lox_state, scanner->line, "Unexpected character.");
