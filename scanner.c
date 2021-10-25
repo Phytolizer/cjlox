@@ -136,7 +136,14 @@ static void scanner_scan_identifier(struct scanner *scanner)
 		scanner_advance(scanner);
 	}
 
-	scanner_add_token(scanner, token_identifier);
+	size_t textlen = scanner->current - scanner->start;
+	char *text = malloc(textlen + 1);
+	strncpy(text, &scanner->source[scanner->start], textlen);
+	text[textlen] = '\0';
+	enum token_type type =
+		keyword_table_look_up(&scanner->keyword_table, text);
+	free(text);
+	scanner_add_token(scanner, type);
 }
 
 static void scanner_scan_token(struct scanner *scanner,
@@ -243,11 +250,30 @@ void scanner_init(struct scanner *scanner, const char *source)
 	scanner->start = 0;
 	scanner->current = 0;
 	scanner->line = 1;
+	keyword_table_init(&scanner->keyword_table);
+	keyword_table_insert(&scanner->keyword_table, "and", token_and_kw);
+	keyword_table_insert(&scanner->keyword_table, "class", token_class_kw);
+	keyword_table_insert(&scanner->keyword_table, "else", token_else_kw);
+	keyword_table_insert(&scanner->keyword_table, "false", token_false_kw);
+	keyword_table_insert(&scanner->keyword_table, "for", token_for_kw);
+	keyword_table_insert(&scanner->keyword_table, "fun", token_fun_kw);
+	keyword_table_insert(&scanner->keyword_table, "if", token_if_kw);
+	keyword_table_insert(&scanner->keyword_table, "nil", token_nil_kw);
+	keyword_table_insert(&scanner->keyword_table, "or", token_or_kw);
+	keyword_table_insert(&scanner->keyword_table, "print", token_print_kw);
+	keyword_table_insert(&scanner->keyword_table, "return",
+			     token_return_kw);
+	keyword_table_insert(&scanner->keyword_table, "super", token_super_kw);
+	keyword_table_insert(&scanner->keyword_table, "this", token_this_kw);
+	keyword_table_insert(&scanner->keyword_table, "true", token_true_kw);
+	keyword_table_insert(&scanner->keyword_table, "var", token_var_kw);
+	keyword_table_insert(&scanner->keyword_table, "while", token_while_kw);
 }
 
 void scanner_deinit(struct scanner *scanner)
 {
 	token_list_deinit(&scanner->tokens);
+	keyword_table_deinit(&scanner->keyword_table);
 }
 
 struct token_list *scanner_scan_tokens(struct scanner *scanner,

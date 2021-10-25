@@ -1,5 +1,6 @@
 #pragma once
 
+#include "keyword_table.h"
 #include "lox.h"
 #include "token.h"
 
@@ -10,6 +11,7 @@ struct scanner {
 	size_t start;
 	size_t current;
 	size_t line;
+	struct keyword_table keyword_table;
 };
 
 void scanner_init(struct scanner *scanner, const char *source);

@@ -10,6 +10,7 @@ project(
 
 executable(
   'lox',
+  'keyword_table.c',
   'lox.c',
   'object.c',
   'scanner.c',
