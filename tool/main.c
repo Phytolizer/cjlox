@@ -27,6 +27,8 @@ struct ast_subclass {
 
 struct ast_root {
 	char *name;
+	char **headers;
+	size_t num_headers;
 	struct ast_subclass *subclasses;
 	size_t num_subclasses;
 };
@@ -48,6 +50,10 @@ static void ast_definition_deinit(struct ast_definition *ast_definition)
 			free(subclass->members);
 		}
 		free(root->subclasses);
+		for (size_t j = 0; j < root->num_headers; ++j) {
+			free(root->headers[j]);
+		}
+		free(root->headers);
 		free(root->name);
 	}
 	free(ast_definition->roots);
@@ -63,10 +69,14 @@ struct scanner {
 enum scanner_mode {
 	scanner_mode_initial,
 	scanner_mode_base_type,
+	scanner_mode_lparen,
+	scanner_mode_rparen,
+	scanner_mode_header_name,
 	scanner_mode_subtype_name,
 	scanner_mode_colon,
 	scanner_mode_subtype_member,
 	scanner_mode_comma,
+	scanner_mode_comma2,
 	scanner_mode_error,
 	scanner_mode_final,
 };
@@ -114,6 +124,41 @@ static enum scanner_mode scanner_scan(struct scanner *scanner,
 		       isalnum(scanner->input[scanner->position])) {
 			++scanner->position;
 		}
+		return scanner_mode_lparen;
+	case scanner_mode_lparen:
+		if (scanner->position == scanner->input_length ||
+		    scanner->input[scanner->position] != '(') {
+			fprintf(stderr,
+				"[LEX] expected include list after base type\n");
+			return scanner_mode_error;
+		}
+		++scanner->position;
+		return scanner_mode_header_name;
+	case scanner_mode_header_name:
+		if (scanner->position == scanner->input_length) {
+			fprintf(stderr,
+				"[LEX] expected include list after '('\n");
+			return scanner_mode_error;
+		}
+		while (scanner->position < scanner->input_length &&
+		       scanner->input[scanner->position] != ',' &&
+		       scanner->input[scanner->position] != ')') {
+			++scanner->position;
+		}
+		if (scanner->position == scanner->input_length) {
+			fprintf(stderr,
+				"[LEX] expected ')' after include list\n");
+			return scanner_mode_error;
+		}
+		if (scanner->input[scanner->position] == ',') {
+			return scanner_mode_comma2;
+		}
+		return scanner_mode_rparen;
+	case scanner_mode_comma2:
+		++scanner->position;
+		return scanner_mode_header_name;
+	case scanner_mode_rparen:
+		++scanner->position;
 		return scanner_mode_subtype_name;
 	case scanner_mode_subtype_name:
 		if (scanner->position == scanner->input_length) {
@@ -200,6 +245,9 @@ static struct ast_definition parse_ast_definition(FILE *stream)
 		case scanner_mode_initial:
 		case scanner_mode_colon:
 		case scanner_mode_comma:
+		case scanner_mode_lparen:
+		case scanner_mode_comma2:
+		case scanner_mode_rparen:
 			break;
 		case scanner_mode_base_type: {
 			++ast_definition.num_roots;
@@ -220,6 +268,27 @@ static struct ast_definition parse_ast_definition(FILE *stream)
 			last_root->name[base_type_name_len] = '\0';
 			last_root->num_subclasses = 0;
 			last_root->subclasses = NULL;
+			last_root->num_headers = 0;
+			last_root->headers = NULL;
+			break;
+		}
+		case scanner_mode_header_name: {
+			struct ast_root *last_root =
+				&ast_definition
+					 .roots[ast_definition.num_roots - 1];
+			++last_root->num_headers;
+			last_root->headers = realloc(last_root->headers,
+						     last_root->num_headers *
+							     sizeof(char *));
+			char **last_header =
+				&last_root->headers[last_root->num_headers - 1];
+			size_t header_len =
+				scanner.position - scanner.token_start;
+			*last_header = malloc(header_len + 1);
+			strncpy(*last_header,
+				&scanner.input[scanner.token_start],
+				header_len);
+			(*last_header)[header_len] = '\0';
 			break;
 		}
 		case scanner_mode_subtype_name: {
@@ -316,6 +385,10 @@ int main(int argc, char *argv[])
 
 	for (size_t i = 0; i < ast_definition.num_roots; ++i) {
 		struct ast_root *root = &ast_definition.roots[i];
+		for (size_t j = 0; j < root->num_headers; ++j) {
+			fprintf(header_output, "#include <lox/%s>\n",
+				root->headers[j]);
+		}
 		fprintf(header_output, "enum %s_type {\n", root->name);
 		for (size_t j = 0; j < root->num_subclasses; ++j) {
 			fprintf(header_output, "\t%s_type_%s,\n", root->name,
