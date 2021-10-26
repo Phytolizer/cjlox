@@ -292,17 +292,56 @@ int main(int argc, char *argv[])
 
 	struct ast_definition ast_definition = parse_ast_definition(input);
 	fclose(input);
-	ast_definition_deinit(&ast_definition);
 
 	if (mkdir("tool", 0755) && errno != EEXIST) {
 		WRITE_ERROR("tool");
 	}
 
-	FILE *output = fopen("tool/ast.c", "we");
-	if (output == NULL) {
+	FILE *header_output = fopen("tool/ast.h", "we");
+	if (header_output == NULL) {
+		WRITE_ERROR("tool/ast.h");
+	}
+	if (fprintf(header_output, "#pragma once\n") < 0) {
+		perror("fprintf");
+		return EX_IOERR;
+	}
+	FILE *source_output = fopen("tool/ast.c", "we");
+	if (source_output == NULL) {
 		WRITE_ERROR("tool/ast.c");
 	}
+	if (fprintf(source_output, "#include \"ast.h\"\n") < 0) {
+		perror("fprintf");
+		return EX_IOERR;
+	}
 
-	fclose(output);
+	for (size_t i = 0; i < ast_definition.num_roots; ++i) {
+		struct ast_root *root = &ast_definition.roots[i];
+		fprintf(header_output, "enum %s_type {\n", root->name);
+		for (size_t j = 0; j < root->num_subclasses; ++j) {
+			fprintf(header_output, "\t%s_type_%s,\n", root->name,
+				root->subclasses[j].name);
+		}
+		fprintf(header_output, "};\n");
+		fprintf(header_output, "struct %s {\n", root->name);
+		fprintf(header_output, "\tenum %s_type type;\n", root->name);
+		fprintf(header_output, "};\n");
+		for (size_t j = 0; j < root->num_subclasses; ++j) {
+			struct ast_subclass *subclass = &root->subclasses[j];
+			fprintf(header_output, "struct %s_%s {\n",
+				subclass->name, root->name);
+			fprintf(header_output, "\tstruct %s base;\n",
+				root->name);
+			for (size_t k = 0; k < subclass->num_members; ++k) {
+				fprintf(header_output, "\t%s;\n",
+					subclass->members[k]);
+			}
+			fprintf(header_output, "};\n");
+		}
+	}
+
+	fclose(source_output);
+	fclose(header_output);
+
+	ast_definition_deinit(&ast_definition);
 	return 0;
 }
