@@ -77,6 +77,7 @@ enum scanner_mode {
 	scanner_mode_subtype_member,
 	scanner_mode_comma,
 	scanner_mode_comma2,
+	scanner_mode_period,
 	scanner_mode_error,
 	scanner_mode_final,
 };
@@ -190,14 +191,21 @@ static enum scanner_mode scanner_scan(struct scanner *scanner,
 		}
 		while (scanner->position < scanner->input_length &&
 		       scanner->input[scanner->position] != '\n' &&
-		       scanner->input[scanner->position] != ',') {
+		       scanner->input[scanner->position] != ',' &&
+		       scanner->input[scanner->position] != '.') {
 			++scanner->position;
 		}
 		if (scanner->position == scanner->input_length ||
 		    scanner->input[scanner->position] == '\n') {
 			return scanner_mode_subtype_name;
 		}
+		if (scanner->input[scanner->position] == '.') {
+			return scanner_mode_period;
+		}
 		return scanner_mode_comma;
+	case scanner_mode_period:
+		++scanner->position;
+		return scanner_mode_subtype_name;
 	case scanner_mode_comma:
 		++scanner->position;
 		return scanner_mode_subtype_member;
@@ -248,6 +256,7 @@ static struct ast_definition parse_ast_definition(FILE *stream)
 		case scanner_mode_lparen:
 		case scanner_mode_comma2:
 		case scanner_mode_rparen:
+		case scanner_mode_period:
 			break;
 		case scanner_mode_base_type: {
 			++ast_definition.num_roots;
