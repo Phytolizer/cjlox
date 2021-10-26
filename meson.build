@@ -20,6 +20,7 @@ ast_lib = static_library(
 
 executable(
   'lox',
+  'source' / 'ast_printer.c',
   'source' / 'keyword_table.c',
   'source' / 'lox.c',
   'source' / 'object.c',

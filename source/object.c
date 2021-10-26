@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 void object_init_null(struct object *object)
 {
@@ -41,6 +42,34 @@ void object_print(struct object *object)
 		break;
 	case object_string:
 		printf("%s", object->as.string);
+		break;
+	}
+}
+
+size_t object_query_string_length(struct object *object)
+{
+	switch (object->type) {
+	case object_null:
+		return sizeof("null") - 1;
+	case object_float64:
+		return snprintf(NULL, 0, "%lf", object->as.float64);
+	case object_string:
+		return strlen(object->as.string);
+	}
+	return 0;
+}
+
+void object_print_to_string(char *str, struct object *object)
+{
+	switch (object->type) {
+	case object_null:
+		sprintf(str, "null");
+		break;
+	case object_float64:
+		sprintf(str, "%lf", object->as.float64);
+		break;
+	case object_string:
+		strcpy(str, object->as.string);
 		break;
 	}
 }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stddef.h>
 #include <stdint.h>
 
 enum object_type {
@@ -22,3 +23,5 @@ void object_init_string(struct object *object, char *value);
 void object_deinit(struct object *object);
 
 void object_print(struct object *object);
+size_t object_query_string_length(struct object *object);
+void object_print_to_string(char *str, struct object *object);
