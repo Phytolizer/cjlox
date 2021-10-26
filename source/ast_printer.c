@@ -47,7 +47,7 @@ static char *parenthesize(struct ast_printer *ast_printer, const char *name,
 	va_start(args, arg);
 	size_t args_len = 0;
 	for (size_t i = 0; i < children; ++i) {
-		struct expr *child = va_arg(args, struct expr *);
+		struct expr *child = i == 0 ? arg : va_arg(args, struct expr *);
 		args_visited[i] = expr_accept_ast_printer(child, ast_printer);
 		args_len += strlen(args_visited[i]);
 		if (i < children - 1) {

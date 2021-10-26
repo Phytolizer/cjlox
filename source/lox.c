@@ -1,6 +1,7 @@
 #include "lox/lox.h"
 
 #include "lox/ast_printer.h"
+#include "lox/expr_destructors.h"
 #include "lox/parser.h"
 #include "lox/scanner.h"
 #include "lox/token.h"
@@ -41,7 +42,10 @@ static void run(struct lox_state *lox_state, const char *source)
 	struct expr *expr = parser_parse(&parser);
 	if (expr) {
 		struct ast_printer ast_printer;
-		expr_accept_ast_printer(expr, &ast_printer);
+		char *text = expr_accept_ast_printer(expr, &ast_printer);
+		expr_free(expr);
+		printf("%s\n", text);
+		free(text);
 	}
 	scanner_deinit(&scanner);
 }

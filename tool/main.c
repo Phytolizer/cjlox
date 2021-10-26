@@ -55,6 +55,7 @@ static void ast_definition_deinit(struct ast_definition *ast_definition)
 				free(subclass->members[k]);
 			}
 			free(subclass->members);
+			free(subclass->name);
 		}
 		free(root->subclasses);
 		for (size_t j = 0; j < root->num_headers; ++j) {
@@ -344,12 +345,14 @@ static struct ast_definition parse_ast_definition(FILE *stream)
 			strncpy(last_root->name,
 				&scanner.input[scanner.token_start],
 				base_type_name_len);
-			fprintf(stderr, "root: %s\n", last_root->name);
 			last_root->name[base_type_name_len] = '\0';
+			fprintf(stderr, "root: %s\n", last_root->name);
 			last_root->num_subclasses = 0;
 			last_root->subclasses = NULL;
 			last_root->num_headers = 0;
 			last_root->headers = NULL;
+			last_root->num_visitors = 0;
+			last_root->visitors = NULL;
 			break;
 		}
 		case scanner_mode_header_name: {
@@ -427,8 +430,8 @@ static struct ast_definition parse_ast_definition(FILE *stream)
 			strncpy(last_subclass->name,
 				&scanner.input[scanner.token_start],
 				subclass_name_len);
-			fprintf(stderr, " subclass: %s\n", last_subclass->name);
 			last_subclass->name[subclass_name_len] = '\0';
+			fprintf(stderr, " subclass: %s\n", last_subclass->name);
 			last_subclass->members = NULL;
 			last_subclass->num_members = 0;
 			break;
@@ -454,8 +457,8 @@ static struct ast_definition parse_ast_definition(FILE *stream)
 			strncpy(*last_member,
 				&scanner.input[scanner.token_start],
 				member_len);
-			fprintf(stderr, "  member: %s\n", *last_member);
 			(*last_member)[member_len] = '\0';
+			fprintf(stderr, "  member: %s\n", *last_member);
 			break;
 		}
 		default:

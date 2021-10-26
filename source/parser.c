@@ -252,7 +252,8 @@ static bool match(struct parser *parser, size_t n, enum token_type type1, ...)
 	va_list args;
 	va_start(args, type1);
 	for (size_t i = 0; i < n; ++i) {
-		if (check(parser, va_arg(args, enum token_type))) {
+		if ((i == 0 && check(parser, type1)) ||
+		    (i > 0 && check(parser, va_arg(args, enum token_type)))) {
 			advance(parser);
 			return true;
 		}
