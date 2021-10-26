@@ -8,6 +8,13 @@ project(
   ],
 )
 
+subdir('tool')
+
+ast_lib = static_library(
+  'lox-ast',
+  generated_ast,
+)
+
 executable(
   'lox',
   'keyword_table.c',
@@ -16,4 +23,5 @@ executable(
   'scanner.c',
   'token.c',
   'token_type.c',
+  link_with : ast_lib,
 )
