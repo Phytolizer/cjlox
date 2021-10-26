@@ -36,6 +36,23 @@ struct ast_definition {
 	size_t num_roots;
 };
 
+static void ast_definition_deinit(struct ast_definition *ast_definition)
+{
+	for (size_t i = 0; i < ast_definition->num_roots; ++i) {
+		struct ast_root *root = &ast_definition->roots[i];
+		for (size_t j = 0; j < root->num_subclasses; ++j) {
+			struct ast_subclass *subclass = &root->subclasses[j];
+			for (size_t k = 0; k < subclass->num_members; ++k) {
+				free(subclass->members[k]);
+			}
+			free(subclass->members);
+		}
+		free(root->subclasses);
+		free(root->name);
+	}
+	free(ast_definition->roots);
+}
+
 struct scanner {
 	const char *input;
 	size_t input_length;
@@ -185,9 +202,10 @@ static struct ast_definition parse_ast_definition(FILE *stream)
 		case scanner_mode_comma:
 			break;
 		case scanner_mode_base_type: {
+			++ast_definition.num_roots;
 			ast_definition.roots =
 				realloc(ast_definition.roots,
-					(ast_definition.num_roots + 1) *
+					(ast_definition.num_roots) *
 						sizeof(struct ast_root));
 			size_t base_type_name_len =
 				scanner.position - scanner.token_start;
@@ -274,6 +292,7 @@ int main(int argc, char *argv[])
 
 	struct ast_definition ast_definition = parse_ast_definition(input);
 	fclose(input);
+	ast_definition_deinit(&ast_definition);
 
 	if (mkdir("tool", 0755) && errno != EEXIST) {
 		WRITE_ERROR("tool");
