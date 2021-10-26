@@ -360,6 +360,9 @@ int main(int argc, char *argv[])
 	}
 
 	struct ast_definition ast_definition = parse_ast_definition(input);
+	if (ast_definition.num_roots == 0) {
+		return EX_DATAERR;
+	}
 	fclose(input);
 
 	if (mkdir("tool", 0755) && errno != EEXIST) {
@@ -382,6 +385,7 @@ int main(int argc, char *argv[])
 		perror("fprintf");
 		return EX_IOERR;
 	}
+	fprintf(source_output, "#include <stdlib.h>\n");
 
 	for (size_t i = 0; i < ast_definition.num_roots; ++i) {
 		struct ast_root *root = &ast_definition.roots[i];
@@ -409,6 +413,65 @@ int main(int argc, char *argv[])
 					subclass->members[k]);
 			}
 			fprintf(header_output, "};\n");
+		}
+		for (size_t j = 0; j < root->num_subclasses; ++j) {
+			struct ast_subclass *subclass = &root->subclasses[j];
+			fprintf(header_output, "struct %s_%s *%s_new_%s(",
+				subclass->name, root->name, root->name,
+				subclass->name);
+			for (size_t k = 0; k < subclass->num_members; ++k) {
+				fprintf(header_output, "%s",
+					subclass->members[k]);
+				if (k < subclass->num_members - 1) {
+					fprintf(header_output, ", ");
+				}
+			}
+			fprintf(header_output, ");\n");
+
+			fprintf(source_output, "struct %s_%s *%s_new_%s(",
+				subclass->name, root->name, root->name,
+				subclass->name);
+			for (size_t k = 0; k < subclass->num_members; ++k) {
+				fprintf(source_output, "%s",
+					subclass->members[k]);
+				if (k < subclass->num_members - 1) {
+					fprintf(source_output, ", ");
+				}
+			}
+			fprintf(source_output, ")\n{\n");
+			fprintf(source_output,
+				"\tstruct %s_%s *result = malloc(sizeof(struct %s_%s));\n",
+				subclass->name, root->name, subclass->name,
+				root->name);
+			fprintf(source_output,
+				"\tresult->base.type = %s_type_%s;\n",
+				root->name, subclass->name);
+			for (size_t k = 0; k < subclass->num_members; ++k) {
+				const char *arg_name =
+					strrchr(subclass->members[k], ' ');
+				if (arg_name == NULL || arg_name[1] == '\0') {
+					fprintf(stderr,
+						"[PARSE] member is not a valid C declaration: %s\n",
+						subclass->members[k]);
+					return EX_DATAERR;
+				}
+				// after the space is the name
+				arg_name = &arg_name[1];
+				while (arg_name[0] != '\0' &&
+				       !isalpha(arg_name[0])) {
+					++arg_name;
+				}
+				if (arg_name[0] == '\0') {
+					fprintf(stderr,
+						"[PARSE] member has no name: %s\n",
+						subclass->members[k]);
+					return EX_DATAERR;
+				}
+				fprintf(source_output, "\tresult->%s = %s;\n",
+					arg_name, arg_name);
+			}
+			fprintf(source_output, "\treturn result;\n");
+			fprintf(source_output, "}\n");
 		}
 	}
 
