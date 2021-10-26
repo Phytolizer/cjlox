@@ -1,10 +1,14 @@
 #include "lox/lox.h"
 
+#include "lox/ast_printer.h"
+#include "lox/parser.h"
 #include "lox/scanner.h"
 #include "lox/token.h"
+#include "tool/ast.h"
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sysexits.h>
 
 static char *read_line(void)
@@ -32,9 +36,12 @@ static void run(struct lox_state *lox_state, const char *source)
 	struct scanner scanner;
 	scanner_init(&scanner, source);
 	struct token_list *tokens = scanner_scan_tokens(&scanner, lox_state);
-
-	for (size_t i = 0; i < tokens->count; ++i) {
-		token_println(&tokens->data[i]);
+	struct parser parser;
+	parser_init(&parser, lox_state, tokens);
+	struct expr *expr = parser_parse(&parser);
+	if (expr) {
+		struct ast_printer ast_printer;
+		expr_accept_ast_printer(expr, &ast_printer);
 	}
 	scanner_deinit(&scanner);
 }
@@ -97,6 +104,19 @@ void lox_init(struct lox_state *lox_state)
 void lox_error(struct lox_state *lox_state, size_t line, const char *message)
 {
 	report(lox_state, line, "", message);
+}
+
+void lox_error_at_token(struct lox_state *lox_state, struct token *token,
+			const char *message)
+{
+	if (token->type == token_eof) {
+		report(lox_state, token->line, " at end", message);
+	} else {
+		char *where = malloc(strlen(token->lexeme) + sizeof(" at ''"));
+		sprintf(where, " at '%s'", token->lexeme);
+		report(lox_state, token->line, where, message);
+		free(where);
+	}
 }
 
 int main(int argc, char *argv[])

@@ -24,6 +24,7 @@ executable(
   'source' / 'keyword_table.c',
   'source' / 'lox.c',
   'source' / 'object.c',
+  'source' / 'parser.c',
   'source' / 'scanner.c',
   'source' / 'token.c',
   'source' / 'token_type.c',
