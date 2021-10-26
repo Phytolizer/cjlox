@@ -25,10 +25,17 @@ struct ast_subclass {
 	size_t num_members;
 };
 
+struct ast_visitor {
+	char *name;
+	char *return_type;
+};
+
 struct ast_root {
 	char *name;
 	char **headers;
 	size_t num_headers;
+	struct ast_visitor *visitors;
+	size_t num_visitors;
 	struct ast_subclass *subclasses;
 	size_t num_subclasses;
 };
@@ -54,6 +61,11 @@ static void ast_definition_deinit(struct ast_definition *ast_definition)
 			free(root->headers[j]);
 		}
 		free(root->headers);
+		for (size_t j = 0; j < root->num_visitors; ++j) {
+			free(root->visitors[j].name);
+			free(root->visitors[j].return_type);
+		}
+		free(root->visitors);
 		free(root->name);
 	}
 	free(ast_definition->roots);
@@ -72,11 +84,16 @@ enum scanner_mode {
 	scanner_mode_lparen,
 	scanner_mode_rparen,
 	scanner_mode_header_name,
+	scanner_mode_v,
+	scanner_mode_visitor_name,
+	scanner_mode_equals,
+	scanner_mode_visitor_return_type,
 	scanner_mode_subtype_name,
 	scanner_mode_colon,
 	scanner_mode_subtype_member,
 	scanner_mode_comma,
 	scanner_mode_comma2,
+	scanner_mode_comma3,
 	scanner_mode_period,
 	scanner_mode_error,
 	scanner_mode_final,
@@ -160,7 +177,54 @@ static enum scanner_mode scanner_scan(struct scanner *scanner,
 		return scanner_mode_header_name;
 	case scanner_mode_rparen:
 		++scanner->position;
-		return scanner_mode_subtype_name;
+		return scanner_mode_v;
+	case scanner_mode_v:
+		if (scanner->position == scanner->input_length ||
+		    scanner->input[scanner->position] != 'V') {
+			fprintf(stderr,
+				"[LEX] expected 'V' after include list\n");
+			return scanner_mode_error;
+		}
+		++scanner->position;
+		return scanner_mode_visitor_name;
+	case scanner_mode_visitor_name:
+		if (scanner->position == scanner->input_length) {
+			fprintf(stderr,
+				"[LEX] expected visitor name after 'V'\n");
+			return scanner_mode_error;
+		}
+		while (scanner->position < scanner->input_length &&
+		       (isalnum(scanner->input[scanner->position]) ||
+			scanner->input[scanner->position] == '_')) {
+			++scanner->position;
+		}
+		return scanner_mode_equals;
+	case scanner_mode_equals:
+		++scanner->position;
+		return scanner_mode_visitor_return_type;
+	case scanner_mode_visitor_return_type:
+		if (scanner->position == scanner->input_length) {
+			fprintf(stderr,
+				"[LEX] expected visitor return type after '='\n");
+			return scanner_mode_error;
+		}
+		while (scanner->position < scanner->input_length &&
+		       scanner->input[scanner->position] != ',' &&
+		       scanner->input[scanner->position] != '.') {
+			++scanner->position;
+		}
+		if (scanner->position == scanner->input_length) {
+			fprintf(stderr,
+				"[LEX] expected ',' or '.' after visitor return type\n");
+			return scanner_mode_error;
+		}
+		if (scanner->input[scanner->position] == ',') {
+			return scanner_mode_comma3;
+		}
+		return scanner_mode_period;
+	case scanner_mode_comma3:
+		++scanner->position;
+		return scanner_mode_visitor_name;
 	case scanner_mode_subtype_name:
 		if (scanner->position == scanner->input_length) {
 			return scanner_mode_final;
@@ -246,7 +310,11 @@ static struct ast_definition parse_ast_definition(FILE *stream)
 		scanner_skip_whitespace(&scanner);
 		enum scanner_mode current = next;
 		next = scanner_scan(&scanner, current);
-		if (next == scanner_mode_error || next == scanner_mode_final) {
+		if (next == scanner_mode_error) {
+			ast_definition_deinit(&ast_definition);
+			return (struct ast_definition){ 0 };
+		}
+		if (next == scanner_mode_final) {
 			break;
 		}
 		switch (current) {
@@ -257,6 +325,9 @@ static struct ast_definition parse_ast_definition(FILE *stream)
 		case scanner_mode_comma2:
 		case scanner_mode_rparen:
 		case scanner_mode_period:
+		case scanner_mode_v:
+		case scanner_mode_comma3:
+		case scanner_mode_equals:
 			break;
 		case scanner_mode_base_type: {
 			++ast_definition.num_roots;
@@ -298,6 +369,44 @@ static struct ast_definition parse_ast_definition(FILE *stream)
 				&scanner.input[scanner.token_start],
 				header_len);
 			(*last_header)[header_len] = '\0';
+			break;
+		}
+		case scanner_mode_visitor_name: {
+			struct ast_root *last_root =
+				&ast_definition
+					 .roots[ast_definition.num_roots - 1];
+			++last_root->num_visitors;
+			last_root->visitors =
+				realloc(last_root->visitors,
+					last_root->num_visitors *
+						sizeof(struct ast_visitor));
+			struct ast_visitor *last_visitor =
+				&last_root->visitors[last_root->num_visitors -
+						     1];
+			size_t visitor_len =
+				scanner.position - scanner.token_start;
+			last_visitor->name = malloc(visitor_len + 1);
+			strncpy(last_visitor->name,
+				&scanner.input[scanner.token_start],
+				visitor_len);
+			last_visitor->name[visitor_len] = '\0';
+			last_visitor->return_type = NULL;
+			break;
+		}
+		case scanner_mode_visitor_return_type: {
+			struct ast_root *last_root =
+				&ast_definition
+					 .roots[ast_definition.num_roots - 1];
+			struct ast_visitor *last_visitor =
+				&last_root->visitors[last_root->num_visitors -
+						     1];
+			size_t return_type_len =
+				scanner.position - scanner.token_start;
+			last_visitor->return_type = malloc(return_type_len + 1);
+			strncpy(last_visitor->return_type,
+				&scanner.input[scanner.token_start],
+				return_type_len);
+			last_visitor->return_type[return_type_len] = '\0';
 			break;
 		}
 		case scanner_mode_subtype_name: {
@@ -350,6 +459,7 @@ static struct ast_definition parse_ast_definition(FILE *stream)
 			break;
 		}
 		default:
+			fprintf(stderr, "uncovered code path : %d\n", current);
 			assert(0 && "uncovered code path in parser");
 		}
 	}
@@ -390,17 +500,23 @@ int main(int argc, char *argv[])
 	if (source_output == NULL) {
 		WRITE_ERROR("tool/ast.c");
 	}
-	if (fprintf(source_output, "#include \"ast.h\"\n") < 0) {
+	if (fprintf(source_output, "#include \"ast.h\"\n\n") < 0) {
 		perror("fprintf");
 		return EX_IOERR;
 	}
+	fprintf(source_output, "#include <assert.h>\n");
 	fprintf(source_output, "#include <stdlib.h>\n");
+	fprintf(source_output, "\n");
 
 	for (size_t i = 0; i < ast_definition.num_roots; ++i) {
 		struct ast_root *root = &ast_definition.roots[i];
 		for (size_t j = 0; j < root->num_headers; ++j) {
 			fprintf(header_output, "#include <lox/%s>\n",
 				root->headers[j]);
+		}
+		for (size_t j = 0; j < root->num_visitors; ++j) {
+			fprintf(source_output, "#include <lox/%s.h>\n",
+				root->visitors[j].name);
 		}
 		fprintf(header_output, "enum %s_type {\n", root->name);
 		for (size_t j = 0; j < root->num_subclasses; ++j) {
@@ -480,6 +596,35 @@ int main(int argc, char *argv[])
 					arg_name, arg_name);
 			}
 			fprintf(source_output, "\treturn result;\n");
+			fprintf(source_output, "}\n");
+		}
+		for (size_t j = 0; j < root->num_visitors; ++j) {
+			struct ast_visitor *visitor = &root->visitors[j];
+			fprintf(header_output, "struct %s;\n", visitor->name);
+			fprintf(header_output,
+				"%s %s_accept_%s(struct %s *self, struct %s *visitor);\n",
+				visitor->return_type, root->name, visitor->name,
+				root->name, visitor->name);
+			fprintf(source_output,
+				"%s %s_accept_%s(struct %s *self, struct %s *visitor)\n",
+				visitor->return_type, root->name, visitor->name,
+				root->name, visitor->name);
+			fprintf(source_output, "{\n");
+			fprintf(source_output, "\tswitch (self->type) {\n");
+			for (size_t k = 0; k < root->num_subclasses; ++k) {
+				struct ast_subclass *subclass =
+					&root->subclasses[k];
+				fprintf(source_output, "\tcase %s_type_%s:\n",
+					root->name, subclass->name);
+				fprintf(source_output,
+					"\t\treturn %s_visit_%s_%s(visitor, (struct %s_%s *)self);\n",
+					visitor->name, subclass->name,
+					root->name, subclass->name, root->name);
+			}
+			fprintf(source_output, "\t}\n");
+			fprintf(source_output,
+				"\tassert(0 && \"invalid %s type\");\n",
+				root->name);
 			fprintf(source_output, "}\n");
 		}
 	}
