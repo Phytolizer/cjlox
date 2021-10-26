@@ -1,4 +1,4 @@
-#include "object.h"
+#include "lox/object.h"
 
 #include <stdio.h>
 #include <stdlib.h>

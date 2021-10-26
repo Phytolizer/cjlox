@@ -1,7 +1,7 @@
-#include "lox.h"
+#include "lox/lox.h"
 
-#include "scanner.h"
-#include "token.h"
+#include "lox/scanner.h"
+#include "lox/token.h"
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>

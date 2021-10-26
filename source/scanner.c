@@ -1,7 +1,7 @@
-#include "scanner.h"
+#include "lox/scanner.h"
 
-#include "object.h"
-#include "token.h"
+#include "lox/object.h"
+#include "lox/token.h"
 #include <stdlib.h>
 #include <string.h>
 

@@ -1,4 +1,4 @@
-#include "token_type.h"
+#include "lox/token_type.h"
 
 const char *token_type_name(enum token_type token_type)
 {

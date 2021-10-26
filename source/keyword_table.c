@@ -1,4 +1,4 @@
-#include "keyword_table.h"
+#include "lox/keyword_table.h"
 
 #include <stdint.h>
 #include <stdlib.h>

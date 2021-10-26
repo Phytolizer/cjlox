@@ -10,18 +10,22 @@ project(
 
 subdir('tool')
 
+incdir = include_directories('include')
+
 ast_lib = static_library(
   'lox-ast',
   generated_ast,
+  include_directories : incdir,
 )
 
 executable(
   'lox',
-  'keyword_table.c',
-  'lox.c',
-  'object.c',
-  'scanner.c',
-  'token.c',
-  'token_type.c',
+  'source' / 'keyword_table.c',
+  'source' / 'lox.c',
+  'source' / 'object.c',
+  'source' / 'scanner.c',
+  'source' / 'token.c',
+  'source' / 'token_type.c',
   link_with : ast_lib,
+  include_directories : incdir,
 )
