@@ -43,7 +43,7 @@ static struct token *peek(struct parser *parser);
 static struct token *previous(struct parser *parser);
 static struct parse_error consume(struct parser *parser, enum token_type type,
 				  const char *message);
-static void synchronize(struct parser *parser);
+// static void synchronize(struct parser *parser);
 
 void parser_init(struct parser *parser, struct lox_state *lox_state,
 		 struct token_list *tokens)
@@ -309,28 +309,28 @@ static struct parse_error consume(struct parser *parser, enum token_type type,
 				     .message = message_out };
 }
 
-static void synchronize(struct parser *parser)
-{
-	advance(parser);
-	while (!is_at_end(parser)) {
-		if (previous(parser)->type == token_semicolon) {
-			return;
-		}
+// static void synchronize(struct parser *parser)
+// {
+// 	advance(parser);
+// 	while (!is_at_end(parser)) {
+// 		if (previous(parser)->type == token_semicolon) {
+// 			return;
+// 		}
 
-		switch (peek(parser)->type) {
-		case token_class_kw:
-		case token_fun_kw:
-		case token_var_kw:
-		case token_for_kw:
-		case token_if_kw:
-		case token_while_kw:
-		case token_print_kw:
-		case token_return_kw:
-			return;
-		default:
-			break;
-		}
+// 		switch (peek(parser)->type) {
+// 		case token_class_kw:
+// 		case token_fun_kw:
+// 		case token_var_kw:
+// 		case token_for_kw:
+// 		case token_if_kw:
+// 		case token_while_kw:
+// 		case token_print_kw:
+// 		case token_return_kw:
+// 			return;
+// 		default:
+// 			break;
+// 		}
 
-		advance(parser);
-	}
-}
+// 		advance(parser);
+// 	}
+// }

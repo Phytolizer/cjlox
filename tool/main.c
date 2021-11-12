@@ -487,23 +487,19 @@ int main(int argc, char *argv[])
 	}
 	fclose(input);
 
-	if (mkdir("tool", 0755) && errno != EEXIST) {
-		WRITE_ERROR("tool");
-	}
-
-	FILE *header_output = fopen("tool/ast.h", "we");
+	FILE *header_output = fopen("include/tool/ast.h", "we");
 	if (header_output == NULL) {
-		WRITE_ERROR("tool/ast.h");
+		WRITE_ERROR("ast.h");
 	}
 	if (fprintf(header_output, "#pragma once\n") < 0) {
 		perror("fprintf");
 		return EX_IOERR;
 	}
-	FILE *source_output = fopen("tool/ast.c", "we");
+	FILE *source_output = fopen("ast.c", "we");
 	if (source_output == NULL) {
 		WRITE_ERROR("tool/ast.c");
 	}
-	if (fprintf(source_output, "#include \"ast.h\"\n\n") < 0) {
+	if (fprintf(source_output, "#include \"tool/ast.h\"\n\n") < 0) {
 		perror("fprintf");
 		return EX_IOERR;
 	}

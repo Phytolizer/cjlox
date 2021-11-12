@@ -1,0 +1,23 @@
+.gitignore
+
+&incdir = include
+
+CC = clang
+
+CFLAGS += -Wall
+CFLAGS += -Wextra
+CFLAGS += -Wpedantic
+CFLAGS += -std=c99
+CFLAGS += -Werror=implicit-function-declaration
+CFLAGS += -Werror=return-type
+CFLAGS += -Werror=unused-function
+CFLAGS += -Werror=unused-parameter
+CFLAGS += -Werror=unused-variable
+CFLAGS += -fsanitize=address,undefined
+CFLAGS += -g3
+
+LDFLAGS += -fsanitize=address,undefined
+
+!cc = |> ^j^ $(CC) $(CFLAGS) -I &(incdir) -o %o -c %f |> %f.o
+!ld = |> $(CC) $(LDFLAGS) -o %o %f |>
+!ar = |> ar rcs %o %f |>

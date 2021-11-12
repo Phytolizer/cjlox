@@ -1,0 +1,6 @@
+include_rules
+
+: tool/lox-ast-gen.exe |> tool/lox-ast-gen.exe tool/lox.ast |> include/tool/ast.h ast.c
+: foreach ast.c | &(incdir)/tool/ast.h |> !cc |>
+: foreach source/*.c | &(incdir)/tool/ast.h |> !cc |>
+: source/*.o *.o |> !ld |> cjlox.exe
