@@ -80,7 +80,7 @@ declare_module(ansi_esc KIND interface)
 declare_module(
     nonstd
     KIND library
-    SOURCES asprintf.c strtok.c strspn.c strpbrk.c strdup.c
+    SOURCES asprintf.c ctype.c strtok.c strspn.c strpbrk.c strdup.c
 )
 declare_module(
     phyto_test
@@ -92,6 +92,19 @@ declare_module(
     KIND executable
     SOURCES main.c
     DEPENDS phyto_vec phyto_test
+)
+declare_module(phyto_span KIND interface)
+declare_module(
+    phyto_string_view
+    KIND library
+    SOURCES string_view.c
+    DEPENDS phyto_span
+)
+declare_module(
+    phyto_string
+    KIND library
+    SOURCES string.c
+    DEPENDS phyto_string_view phyto_vec nonstd
 )
 
 declare_module(

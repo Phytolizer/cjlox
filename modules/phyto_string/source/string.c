@@ -1,0 +1,297 @@
+#include "phyto/string/string.h"
+
+#include <nonstd/ctype.h>
+#include <phyto/string_view/string_view.h>
+#include <stdarg.h>
+#include <stdlib.h>
+
+phyto_string_t phyto_string_new(void) {
+    phyto_string_t result;
+    PHYTO_VEC_INIT(&result);
+    return result;
+}
+
+phyto_string_t phyto_string_own(phyto_string_view_t view) {
+    phyto_string_t str = phyto_string_new();
+    PHYTO_VEC_PUSH_ARRAY(&str, view.begin, view.size);
+    return str;
+}
+
+phyto_string_t phyto_string_from_c(const char* str) {
+    return phyto_string_own(phyto_string_view_from_c(str));
+}
+
+bool phyto_string_reserve(phyto_string_t* string, size_t capacity) {
+    return PHYTO_VEC_RESERVE(string, capacity);
+}
+
+bool phyto_string_append_fill(phyto_string_t* string, size_t count, char fill) {
+    for (size_t i = 0; i < count; ++i) {
+        if (!PHYTO_VEC_PUSH(string, fill)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+phyto_string_view_t phyto_string_view(phyto_string_t string) {
+    return phyto_string_view_from_ptr_length(string.data, string.size);
+}
+
+void phyto_string_append_view(phyto_string_t* string, phyto_string_view_t view) {
+    PHYTO_VEC_PUSH_ARRAY(string, view.begin, view.size);
+}
+
+phyto_string_t phyto_string_capitalize(phyto_string_view_t view) {
+    phyto_string_t result = phyto_string_new();
+    for (size_t i = 0; i < view.size; ++i) {
+        char c = view.begin[i];
+        if (i == 0) {
+            c = nonstd_toupper(c);
+        } else {
+            c = nonstd_tolower(c);
+        }
+        PHYTO_VEC_PUSH(&result, c);
+    }
+    return result;
+}
+
+phyto_string_t phyto_string_center(phyto_string_view_t view, size_t width, char fill) {
+    phyto_string_t result = phyto_string_new();
+    size_t left_padding = (width - view.size) / 2;
+    size_t right_padding = width - view.size - left_padding;
+    for (size_t i = 0; i < left_padding; ++i) {
+        PHYTO_VEC_PUSH(&result, fill);
+    }
+    PHYTO_VEC_PUSH_ARRAY(&result, view.begin, view.size);
+    for (size_t i = 0; i < right_padding; ++i) {
+        PHYTO_VEC_PUSH(&result, fill);
+    }
+    return result;
+}
+
+size_t phyto_string_count(phyto_string_view_t view, phyto_string_view_t sub) {
+    return phyto_string_count_in_range(view, sub, 0, view.size);
+}
+
+size_t phyto_string_count_in_range(phyto_string_view_t view,
+                                   phyto_string_view_t sub,
+                                   size_t start,
+                                   size_t end) {
+    size_t count = 0;
+    size_t sub_size = sub.size;
+    for (size_t i = start; i < end - sub_size; ++i) {
+        if (memcmp(view.begin + i, sub.begin, sub_size) == 0) {
+            ++count;
+        }
+    }
+    return count;
+}
+
+bool phyto_string_ends_with(phyto_string_view_t view, phyto_string_view_t sub) {
+    if (view.size < sub.size) {
+        return false;
+    }
+    return memcmp(view.begin + view.size - sub.size, sub.begin, sub.size) == 0;
+}
+
+phyto_string_t phyto_string_expand_tabs(phyto_string_view_t view, size_t tab_width) {
+    phyto_string_t result = phyto_string_new();
+    for (size_t i = 0; i < view.size; ++i) {
+        char c = view.begin[i];
+        if (c == '\t') {
+            size_t num_spaces = tab_width - (result.size % tab_width);
+            for (size_t j = 0; j < num_spaces; ++j) {
+                PHYTO_VEC_PUSH(&result, ' ');
+            }
+        } else {
+            PHYTO_VEC_PUSH(&result, c);
+        }
+    }
+    return result;
+}
+
+bool phyto_string_find(phyto_string_view_t view, phyto_string_view_t sub, size_t* out_index) {
+    return phyto_string_find_in_range(view, sub, 0, view.size, out_index);
+}
+
+bool phyto_string_find_in_range(phyto_string_view_t view,
+                                phyto_string_view_t sub,
+                                size_t start,
+                                size_t end,
+                                size_t* out_index) {
+    size_t sub_size = sub.size;
+    for (size_t i = start; i < end - sub_size; ++i) {
+        if (memcmp(view.begin + i, sub.begin, sub_size) == 0) {
+            if (out_index != NULL) {
+                *out_index = i;
+            }
+            return true;
+        }
+    }
+    return false;
+}
+
+bool phyto_string_is_alphanumeric(phyto_string_view_t view) {
+    if (view.size == 0) {
+        return false;
+    }
+    for (size_t i = 0; i < view.size; ++i) {
+        if (!nonstd_isalnum(view.begin[i])) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool phyto_string_is_alphabetic(phyto_string_view_t view) {
+    if (view.size == 0) {
+        return false;
+    }
+    for (size_t i = 0; i < view.size; ++i) {
+        if (!nonstd_isalpha(view.begin[i])) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool phyto_string_is_decimal(phyto_string_view_t view) {
+    if (view.size == 0) {
+        return false;
+    }
+    for (size_t i = 0; i < view.size; ++i) {
+        if (!nonstd_isdigit(view.begin[i])) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool phyto_string_is_identifier(phyto_string_view_t view) {
+    if (view.size == 0) {
+        return false;
+    }
+    if (!nonstd_isalpha(view.begin[0]) && view.begin[0] != '_') {
+        return false;
+    }
+    for (size_t i = 1; i < view.size; ++i) {
+        if (!nonstd_isalnum(view.begin[i]) && view.begin[i] != '_') {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool phyto_string_is_lowercase(phyto_string_view_t view) {
+    bool found = false;
+    for (size_t i = 0; i < view.size; ++i) {
+        if (nonstd_isupper(view.begin[i])) {
+            return false;
+        }
+        if (nonstd_islower(view.begin[i])) {
+            found = true;
+        }
+    }
+    return found;
+}
+
+bool phyto_string_is_printable(phyto_string_view_t view) {
+    if (view.size == 0) {
+        return false;
+    }
+    for (size_t i = 0; i < view.size; ++i) {
+        if (!nonstd_isprint(view.begin[i])) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool phyto_string_is_space(phyto_string_view_t view) {
+    if (view.size == 0) {
+        return false;
+    }
+    for (size_t i = 0; i < view.size; ++i) {
+        if (!nonstd_isspace(view.begin[i])) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool phyto_string_is_titlecase(phyto_string_view_t view) {
+    if (view.size == 0) {
+        return false;
+    }
+    bool was_upper = false;
+    bool was_lower = false;
+    for (size_t i = 0; i < view.size; ++i) {
+        if (nonstd_isupper(view.begin[i])) {
+            if (was_upper || was_lower) {
+                return false;
+            }
+            was_upper = true;
+            was_lower = false;
+        } else if (nonstd_islower(view.begin[i])) {
+            was_lower = true;
+            was_upper = false;
+        } else {
+            was_upper = false;
+            was_lower = false;
+        }
+    }
+    return true;
+}
+
+bool phyto_string_is_uppercase(phyto_string_view_t view) {
+    bool found = false;
+    if (view.size == 0) {
+        return false;
+    }
+    for (size_t i = 0; i < view.size; ++i) {
+        if (nonstd_islower(view.begin[i])) {
+            return false;
+        }
+        if (nonstd_isupper(view.begin[i])) {
+            found = true;
+        }
+    }
+    return found;
+}
+
+phyto_string_t phyto_string_join(size_t count, phyto_string_view_t sep, ...) {
+    va_list args;
+    va_start(args, sep);
+    phyto_string_t result = phyto_string_join_va(count, sep, args);
+    va_end(args);
+    return result;
+}
+
+phyto_string_t phyto_string_join_va(size_t count, phyto_string_view_t sep, va_list args) {
+    phyto_string_t result = {};
+    for (size_t i = 0; i < count; ++i) {
+        phyto_string_view_t view = va_arg(args, phyto_string_view_t);
+        phyto_string_append_view(&result, view);
+        if (i < count - 1) {
+            phyto_string_append_view(&result, sep);
+        }
+    }
+    return result;
+}
+
+phyto_string_t phyto_string_left_justify(phyto_string_view_t view, size_t width, char fill) {
+    phyto_string_t result = phyto_string_new();
+    size_t size = view.size;
+    if (size >= width) {
+        return phyto_string_own(view);
+    }
+    phyto_string_reserve(&result, width);
+    phyto_string_append_view(&result, view);
+    phyto_string_append_fill(&result, width - size, fill);
+    return result;
+}
+
+void phyto_string_free(phyto_string_t* str) {
+    PHYTO_VEC_FREE(str);
+}
