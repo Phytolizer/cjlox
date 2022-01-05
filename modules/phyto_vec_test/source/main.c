@@ -1,6 +1,6 @@
 #include <inttypes.h>
 #include <phyto/test/test.h>
-#include <phyto/vec/v2/vec.h>
+#include <phyto/vec/vec.h>
 
 typedef PHYTO_VEC_TYPE(int) vec_int_t;
 typedef PHYTO_VEC_TYPE(double) vec_double_t;

@@ -1,4 +1,4 @@
-#include "phyto/vec/v2/vec.h"
+#include "phyto/vec/vec.h"
 
 #include <stdlib.h>
 

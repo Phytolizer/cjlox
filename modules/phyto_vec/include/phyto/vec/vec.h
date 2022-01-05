@@ -1,125 +1,142 @@
-#ifndef PHYTO_VEC_VEC_H_
-#define PHYTO_VEC_VEC_H_
+#ifndef PHYTO_VEC_V2_VEC_H_
+#define PHYTO_VEC_V2_VEC_H_
 
-#include <assert.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <stdlib.h>
 #include <string.h>
 
-typedef enum {
-    phyto_vec_shrink_mode_never,
-    phyto_vec_shrink_mode_empty,
-    phyto_vec_shrink_mode_percentage,
-} phyto_vec_shrink_mode_t;
-
 typedef struct {
+    uint8_t** p_data;
+    size_t* p_size;
+    size_t* p_capacity;
     size_t element_size;
-    size_t minimum_capacity;
-    phyto_vec_shrink_mode_t shrink_mode;
-    // proportion of 0x100
-    uint32_t shrink_percentage;
-    int (*compare)(const void*, const void*);
-} phyto_vec_configuration_t;
+} phyto_vec_unpacked_t;
 
-typedef struct {
-    uint8_t* data;
-    size_t size;
-    size_t capacity;
-    phyto_vec_configuration_t configuration;
-} phyto_vec_t;
+#define PHYTO_VEC_UNPACK(Vec)                 \
+    ((phyto_vec_unpacked_t){                  \
+        .p_data = (uint8_t**)&(Vec)->data,    \
+        .p_size = &(Vec)->size,               \
+        .p_capacity = &(Vec)->capacity,       \
+        .element_size = sizeof(*(Vec)->data), \
+    })
 
-#define PHYTO_VEC_WRAP(T) \
-    union {               \
+#define PHYTO_VEC_TYPE(T) \
+    struct {              \
         T* data;          \
-        phyto_vec_t base; \
+        size_t size;      \
+        size_t capacity;  \
     }
 
-#define PHYTO_VEC_INIT_CONFIGURATED(T, Configuration) \
-    {                                                 \
-        .base = {                                     \
-            .data = NULL,                             \
-            .size = 0,                                \
-            .capacity = 0,                            \
-            .configuration = Configuration,           \
-        }                                             \
-    }
+#define PHYTO_VEC_INIT(V) memset((V), 0, sizeof(*(V)))
+#define PHYTO_VEC_FREE(V)  \
+    do {                   \
+        free((V)->data);   \
+        PHYTO_VEC_INIT(V); \
+    } while (0)
 
-#define PHYTO_VEC_INIT_DEFAULT(T, Compare)                                              \
-    PHYTO_VEC_INIT_CONFIGURATED(T, ((phyto_vec_configuration_t){                        \
-                                       .element_size = sizeof(T),                       \
-                                       .minimum_capacity = 8,                           \
-                                       .shrink_mode = phyto_vec_shrink_mode_percentage, \
-                                       .shrink_percentage = 0x40,                       \
-                                       .compare = Compare,                              \
-                                   }))
-
-#define PHYTO_VEC_FREE(Vec)                                            \
-    do {                                                               \
-        free((Vec)->base.data);                                        \
-        memset(&(Vec)->base, 0, offsetof(phyto_vec_t, configuration)); \
-    } while (false)
-
-#define PHYTO_VEC_PUSH(Vec, Value)          \
-    ({                                      \
-        typeof(*(Vec)->data) val = Value;   \
-        phyto_vec_push(&(Vec)->base, &val); \
+#define PHYTO_VEC_PUSH(V, Val)                             \
+    ({                                                     \
+        bool ret = phyto_vec_expand_(PHYTO_VEC_UNPACK(V)); \
+        if (ret) {                                         \
+            (V)->data[(V)->size++] = (Val);                \
+        }                                                  \
+        ret;                                               \
     })
 
-#define PHYTO_VEC_SIZE(Vec) ((Vec)->base.size)
-
-#define PHYTO_VEC_RESIZE(Vec, NewSize) phyto_vec_resize(&(Vec)->base, NewSize)
-
-#define PHYTO_VEC_POP(Vec, OutValue) phyto_vec_pop_to(&(Vec)->base, OutValue)
-#define PHYTO_VEC_SPLICE(Vec, Index, Count) phyto_vec_splice(&(Vec)->base, Index, Count)
-#define PHYTO_VEC_SWAP_SPLICE(Vec, Index, Count) phyto_vec_swap_splice(&(Vec)->base, Index, Count)
-#define PHYTO_VEC_INSERT(Vec, Index, Value)          \
-    ({                                               \
-        typeof(*(Vec)->data) val = Value;            \
-        phyto_vec_insert(&(Vec)->base, Index, &val); \
+#define PHYTO_VEC_POP(V, Val)                  \
+    ({                                         \
+        bool ret = (V)->size > 0;              \
+        if (ret) {                             \
+            *(Val) = ((V)->data[--(V)->size]); \
+        }                                      \
+        ret;                                   \
     })
-#define PHYTO_VEC_SORT(Vec) phyto_vec_sort(&(Vec)->base)
-#define PHYTO_VEC_SWAP(Vec, IndexA, IndexB) phyto_vec_swap(&(Vec)->base, IndexA, IndexB)
-#define PHYTO_VEC_TRUNCATE(Vec, NewSize) phyto_vec_truncate(&(Vec)->base, NewSize)
-#define PHYTO_VEC_CLEAR(Vec) phyto_vec_clear(&(Vec)->base)
-#define PHYTO_VEC_RESERVE(Vec, NewCapacity) phyto_vec_reserve(&(Vec)->base, NewCapacity)
-#define PHYTO_VEC_COMPACT(Vec) phyto_vec_compact(&(Vec)->base)
-#define PHYTO_VEC_PUSH_VEC(Vec, Other) phyto_vec_push_vec(&(Vec)->base, &(Other)->base)
-#define PHYTO_VEC_PUSH_ARRAY(Vec, Array, Count)                                             \
-    ({                                                                                      \
-        static_assert(sizeof(*(Array)) == sizeof(*(Vec)->data), "incompatible array type"); \
-        phyto_vec_push_array(&(Vec)->base, Array, Count);                                   \
-    })
-#define PHYTO_VEC_FIND(Vec, Value, OutIndex)          \
-    ({                                                \
-        typeof(*(Vec)->data) val = Value;             \
-        phyto_vec_find(&(Vec)->base, &val, OutIndex); \
-    })
-#define PHYTO_VEC_REMOVE(Vec, Value)          \
-    ({                                        \
-        typeof(*(Vec)->data) val = Value;     \
-        phyto_vec_remove(&(Vec)->base, &val); \
-    })
-#define PHYTO_VEC_REVERSE(Vec) phyto_vec_reverse(&(Vec)->base)
 
-bool phyto_vec_resize(phyto_vec_t* vec, size_t new_size);
-bool phyto_vec_push(phyto_vec_t* vec, const void* value);
-const void* phyto_vec_pop(phyto_vec_t* vec);
-bool phyto_vec_pop_to(phyto_vec_t* vec, void* value);
-bool phyto_vec_splice(phyto_vec_t* vec, size_t index, size_t count);
-bool phyto_vec_swap_splice(phyto_vec_t* vec, size_t index, size_t count);
-bool phyto_vec_insert(phyto_vec_t* vec, size_t index, const void* value);
-bool phyto_vec_sort(phyto_vec_t* vec);
-bool phyto_vec_swap(phyto_vec_t* vec, size_t index_a, size_t index_b);
-bool phyto_vec_truncate(phyto_vec_t* vec, size_t new_size);
-void phyto_vec_clear(phyto_vec_t* vec);
-bool phyto_vec_reserve(phyto_vec_t* vec, size_t new_capacity);
-bool phyto_vec_compact(phyto_vec_t* vec);
-bool phyto_vec_push_vec(phyto_vec_t* vec, const phyto_vec_t* other);
-bool phyto_vec_push_array(phyto_vec_t* vec, const void* array, size_t count);
-bool phyto_vec_find(phyto_vec_t* vec, const void* value, size_t* out_index);
-bool phyto_vec_remove(phyto_vec_t* vec, const void* value);
-bool phyto_vec_reverse(phyto_vec_t* vec);
+#define PHYTO_VEC_SPLICE(V, Start, Count)                     \
+    do {                                                      \
+        phyto_vec_splice_(PHYTO_VEC_UNPACK(V), Start, Count); \
+        (V)->size -= (Count);                                 \
+    } while (0)
 
-#endif  // PHYTO_VEC_VEC_H_
+#define PHYTO_VEC_SWAPSPLICE(V, Start, Count)                     \
+    do {                                                          \
+        phyto_vec_swapsplice_(PHYTO_VEC_UNPACK(V), Start, Count); \
+        (V)->size -= (Count);                                     \
+    } while (0)
+
+#define PHYTO_VEC_INSERT(V, Idx, Val)                           \
+    ({                                                          \
+        bool ret = phyto_vec_insert_(PHYTO_VEC_UNPACK(V), Idx); \
+        if (ret) {                                              \
+            (V)->data[Idx] = (Val);                             \
+            ++(V)->size;                                        \
+        }                                                       \
+        ret;                                                    \
+    })
+
+#define PHYTO_VEC_SORT(V, Fn) qsort((V)->data, (V)->size, sizeof(*(V)->data), Fn)
+
+#define PHYTO_VEC_SWAP(V, IndexA, IndexB) phyto_vec_swap_(PHYTO_VEC_UNPACK(V), IndexA, IndexB)
+
+#define PHYTO_VEC_TRUNCATE(V, Len) ((V)->size = (Len) < (V)->size ? (Len) : (V)->size)
+
+#define PHYTO_VEC_CLEAR(V) ((V)->size = 0)
+
+#define PHYTO_VEC_FIRST(V) ((V)->data[0])
+
+#define PHYTO_VEC_LAST(V) ((V)->data[(V)->size - 1])
+
+#define PHYTO_VEC_RESERVE(V, N) phyto_vec_reserve_(PHYTO_VEC_UNPACK(V), N)
+
+#define PHYTO_VEC_COMPACT(V) phyto_vec_compact_(PHYTO_VEC_UNPACK(V))
+
+#define PHYTO_VEC_PUSH_ARRAY(V, Arr, Count)                             \
+    do {                                                                \
+        size_t n_ = (Count);                                            \
+        if (!phyto_vec_reserve_(PHYTO_VEC_UNPACK(V), (V)->size + n_)) { \
+            break;                                                      \
+        }                                                               \
+        for (size_t i_ = 0; i_ < n_; ++i_) {                            \
+            (V)->data[(V)->size++] = (Arr)[i_];                         \
+        }                                                               \
+    } while (0)
+
+#define PHYTO_VEC_EXTEND(V, V2) PHYTO_VEC_PUSH_ARRAY((V), (V2)->data, (V2)->size)
+
+#define PHYTO_VEC_FIND(V, Val, Idx)                        \
+    ({                                                     \
+        for (*(Idx) = 0; *(Idx) < (V)->size; ++(*(Idx))) { \
+            if ((V)->data[*(Idx)] == (Val)) {              \
+                break;                                     \
+            }                                              \
+        }                                                  \
+        *(Idx) != (V)->size;                               \
+    })
+
+#define PHYTO_VEC_REMOVE(V, Val)            \
+    do {                                    \
+        size_t idx_;                        \
+        if (PHYTO_VEC_FIND(V, Val, idx_)) { \
+            PHYTO_VEC_SPLICE(V, idx_, 1);   \
+        }                                   \
+    } while (0)
+
+#define PHYTO_VEC_REVERSE(V)                           \
+    do {                                               \
+        size_t i_ = (V)->size / 2;                     \
+        while (i_--) {                                 \
+            PHYTO_VEC_SWAP(V, i_, (V)->size - i_ - 1); \
+        }                                              \
+    } while (0)
+
+bool phyto_vec_expand_(phyto_vec_unpacked_t vec);
+bool phyto_vec_reserve_(phyto_vec_unpacked_t vec, size_t n);
+bool phyto_vec_reserve_po2_(phyto_vec_unpacked_t vec, size_t n);
+bool phyto_vec_compact_(phyto_vec_unpacked_t vec);
+bool phyto_vec_insert_(phyto_vec_unpacked_t vec, size_t idx);
+void phyto_vec_splice_(phyto_vec_unpacked_t vec, size_t start, size_t count);
+void phyto_vec_swapsplice_(phyto_vec_unpacked_t vec, size_t start, size_t count);
+void phyto_vec_swap_(phyto_vec_unpacked_t vec, size_t idx1, size_t idx2);
+
+#endif  // PHYTO_VEC_V2_VEC_H_
