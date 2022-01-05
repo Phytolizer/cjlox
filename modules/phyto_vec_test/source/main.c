@@ -122,6 +122,30 @@ PHYTO_TEST_FUNC(vec_sort) {
     PHYTO_TEST_PASS();
 }
 
+PHYTO_TEST_FUNC(vec_swap) {
+    vec_int_t vec = PHYTO_VEC_INIT_DEFAULT(int, compare_ints);
+    PHYTO_VEC_PUSH(&vec, 'a');
+    PHYTO_VEC_PUSH(&vec, 'b');
+    PHYTO_VEC_PUSH(&vec, 'c');
+    PHYTO_VEC_SWAP(&vec, 0, 2);
+    PHYTO_TEST_ASSERT(vec.data[0] == 'c' && vec.data[2] == 'a', PHYTO_VEC_FREE(&vec),
+                      "vec.data[0] == %c, expected 'c', vec.data[2] == %c, expected 'a'",
+                      vec.data[0], vec.data[2]);
+    PHYTO_VEC_SWAP(&vec, 0, 1);
+    PHYTO_TEST_ASSERT(vec.data[0] == 'b' && vec.data[1] == 'c', PHYTO_VEC_FREE(&vec),
+                      "vec.data[0] == %c, expected 'b', vec.data[1] == %c, expected 'c'",
+                      vec.data[0], vec.data[1]);
+    PHYTO_VEC_SWAP(&vec, 1, 2);
+    PHYTO_TEST_ASSERT(vec.data[1] == 'a' && vec.data[2] == 'c', PHYTO_VEC_FREE(&vec),
+                      "vec.data[1] == %c, expected 'a', vec.data[2] == %c, expected 'c'",
+                      vec.data[1], vec.data[2]);
+    PHYTO_VEC_SWAP(&vec, 1, 1);
+    PHYTO_TEST_ASSERT(vec.data[1] == 'a', PHYTO_VEC_FREE(&vec), "vec.data[1] == %c, expected 'a'",
+                      vec.data[1]);
+    PHYTO_VEC_FREE(&vec);
+    PHYTO_TEST_PASS();
+}
+
 PHYTO_TEST_SUITE_FUNC(vec_tests) {
     PHYTO_TEST_RUN(vec_push);
     PHYTO_TEST_RUN(vec_pop);
@@ -129,12 +153,13 @@ PHYTO_TEST_SUITE_FUNC(vec_tests) {
     PHYTO_TEST_RUN(vec_swap_splice);
     PHYTO_TEST_RUN(vec_insert);
     PHYTO_TEST_RUN(vec_sort);
+    PHYTO_TEST_RUN(vec_swap);
 }
 
 int main(void) {
     phyto_test_state_t state = {0};
     PHYTO_TEST_RUN_SUITE(vec_tests, &state);
-    printf("%" PRIu64 " tests, %" PRIu64 " assertions, %" PRIu64 " failures\n", state.tests_passed,
-           state.assert_count, state.tests_failed);
+    printf("%" PRIu64 " tests, %" PRIu64 " assertions, %" PRIu64 " failures\n",
+           state.tests_passed + state.tests_failed, state.assert_count, state.tests_failed);
     return state.tests_failed != 0;
 }
