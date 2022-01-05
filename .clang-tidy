@@ -16,6 +16,7 @@ Checks: |
   -cppcoreguidelines-avoid-magic-numbers,
   -bugprone-macro-parentheses,
   -cppcoreguidelines-init-variables,
+  -bugprone-easily-swappable-parameters,
 WarningsAsErrors: ''
 CheckOptions:
   - key: 'bugprone-argument-comment.StrictMode'

@@ -47,7 +47,6 @@ function(declare_module NAME)
         ${DM_PUBLICITY}
         -Wall
         -Wextra
-        -Wpedantic
         -Werror=implicit-function-declaration
         -Werror=return-type
         -Werror=unused-function
@@ -76,7 +75,23 @@ declare_module(
     phyto_vec
     KIND library
     SOURCES vec.c
-    DEPENDS phyto_strong_types
+)
+declare_module(ansi_esc KIND interface)
+declare_module(
+    nonstd
+    KIND library
+    SOURCES asprintf.c strtok.c strspn.c strpbrk.c strdup.c
+)
+declare_module(
+    phyto_test
+    KIND interface
+    DEPENDS ansi_esc nonstd
+)
+declare_module(
+    phyto_vec_test
+    KIND executable
+    SOURCES main.c
+    DEPENDS phyto_vec phyto_test
 )
 
 declare_module(
@@ -91,3 +106,8 @@ declare_module(
     SOURCES main.c
     DEPENDS lox sysexits
 )
+
+if(PROJECT_IS_TOP_LEVEL)
+    enable_testing()
+    add_test(NAME phyto_vec_test COMMAND phyto_vec_test)
+endif()

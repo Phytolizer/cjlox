@@ -1,11 +1,11 @@
 #ifndef PHYTO_VEC_VEC_H_
 #define PHYTO_VEC_VEC_H_
 
-#include <phyto/strong_types/strong_types.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 typedef enum {
     phyto_vec_shrink_mode_never,
@@ -48,7 +48,7 @@ typedef struct {
 #define PHYTO_VEC_INIT_DEFAULT(T, Compare)                                              \
     PHYTO_VEC_INIT_CONFIGURATED(T, ((phyto_vec_configuration_t){                        \
                                        .element_size = sizeof(T),                       \
-                                       .minimum_size = 8,                               \
+                                       .minimum_capacity = 8,                           \
                                        .shrink_mode = phyto_vec_shrink_mode_percentage, \
                                        .shrink_percentage = 0x40,                       \
                                        .compare = Compare,                              \

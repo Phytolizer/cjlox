@@ -12,7 +12,7 @@ bool phyto_vec_resize(phyto_vec_t* vec, size_t new_size) {
 }
 
 bool phyto_vec_push(phyto_vec_t* vec, const void* value) {
-    if (vec->size == vec->capacity && !phyto_vec_resize(vec, vec->capacity + 1)) {
+    if (vec->size == vec->capacity && !phyto_vec_reserve(vec, vec->capacity + 1)) {
         return false;
     }
 
@@ -34,12 +34,12 @@ const void* phyto_vec_pop(phyto_vec_t* vec) {
             break;
         case phyto_vec_shrink_mode_percentage:
             if (vec->size * 0x100 / vec->capacity < vec->configuration.shrink_percentage) {
-                phyto_vec_resize(vec, vec->capacity / 2);
+                phyto_vec_reserve(vec, vec->capacity / 2);
             }
             break;
         case phyto_vec_shrink_mode_empty:
             if (vec->size == 0) {
-                phyto_vec_resize(vec, 0);
+                phyto_vec_reserve(vec, 0);
             }
             break;
     }
@@ -169,12 +169,12 @@ bool phyto_vec_reserve(phyto_vec_t* vec, size_t new_capacity) {
     } else {
         return true;
     }
-    uint8_t* new_data = realloc(vec->data, new_capacity * vec->configuration.element_size);
+    uint8_t* new_data = realloc(vec->data, actual_new_capacity * vec->configuration.element_size);
     if (new_data == NULL) {
         return false;
     }
     vec->data = new_data;
-    vec->capacity = new_capacity;
+    vec->capacity = actual_new_capacity;
     return true;
 }
 
