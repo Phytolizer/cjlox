@@ -239,6 +239,24 @@ PHYTO_TEST_FUNC(vec_push_vec) {
     PHYTO_TEST_PASS();
 }
 
+PHYTO_TEST_FUNC(vec_find) {
+    vec_int_t v = PHYTO_VEC_INIT_DEFAULT(int, compare_ints);
+    for (int i = 0; i < 26; ++i) {
+        PHYTO_VEC_PUSH(&v, 'a' + i);
+    }
+    size_t i;
+    PHYTO_VEC_FIND(&v, 'a', &i);
+    PHYTO_TEST_ASSERT(i == 0, PHYTO_VEC_FREE(&v), "i == %zu, expected 0", i);
+    PHYTO_VEC_FIND(&v, 'z', &i);
+    PHYTO_TEST_ASSERT(i == 25, PHYTO_VEC_FREE(&v), "i == %zu, expected 25", i);
+    PHYTO_VEC_FIND(&v, 'd', &i);
+    PHYTO_TEST_ASSERT(i == 3, PHYTO_VEC_FREE(&v), "i == %zu, expected 3", i);
+    PHYTO_TEST_ASSERT(!PHYTO_VEC_FIND(&v, '_', &i), PHYTO_VEC_FREE(&v),
+                      "PHYTO_VEC_FIND(&v, '_', &i) reported success");
+    PHYTO_VEC_FREE(&v);
+    PHYTO_TEST_PASS();
+}
+
 PHYTO_TEST_SUITE_FUNC(vec_tests) {
     PHYTO_TEST_RUN(vec_push);
     PHYTO_TEST_RUN(vec_pop);
@@ -252,6 +270,7 @@ PHYTO_TEST_SUITE_FUNC(vec_tests) {
     PHYTO_TEST_RUN(vec_compact);
     PHYTO_TEST_RUN(vec_push_array);
     PHYTO_TEST_RUN(vec_push_vec);
+    PHYTO_TEST_RUN(vec_find);
 }
 
 int main(void) {
