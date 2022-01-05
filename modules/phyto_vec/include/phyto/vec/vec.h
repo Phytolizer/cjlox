@@ -1,6 +1,7 @@
 #ifndef PHYTO_VEC_VEC_H_
 #define PHYTO_VEC_VEC_H_
 
+#include <assert.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -62,7 +63,7 @@ typedef struct {
 
 #define PHYTO_VEC_PUSH(Vec, Value)          \
     ({                                      \
-        typeof(Value) val = Value;          \
+        typeof(*(Vec)->data) val = Value;   \
         phyto_vec_push(&(Vec)->base, &val); \
     })
 
@@ -75,7 +76,7 @@ typedef struct {
 #define PHYTO_VEC_SWAP_SPLICE(Vec, Index, Count) phyto_vec_swap_splice(&(Vec)->base, Index, Count)
 #define PHYTO_VEC_INSERT(Vec, Index, Value)          \
     ({                                               \
-        typeof(Value) val = Value;                   \
+        typeof(*(Vec)->data) val = Value;            \
         phyto_vec_insert(&(Vec)->base, Index, &val); \
     })
 #define PHYTO_VEC_SORT(Vec) phyto_vec_sort(&(Vec)->base)
@@ -85,15 +86,19 @@ typedef struct {
 #define PHYTO_VEC_RESERVE(Vec, NewCapacity) phyto_vec_reserve(&(Vec)->base, NewCapacity)
 #define PHYTO_VEC_COMPACT(Vec) phyto_vec_compact(&(Vec)->base)
 #define PHYTO_VEC_PUSH_VEC(Vec, Other) phyto_vec_push_vec(&(Vec)->base, &(Other)->base)
-#define PHYTO_VEC_PUSH_ARRAY(Vec, Array, Count) phyto_vec_push_array(&(Vec)->base, Array, Count)
+#define PHYTO_VEC_PUSH_ARRAY(Vec, Array, Count)                                             \
+    ({                                                                                      \
+        static_assert(sizeof(*(Array)) == sizeof(*(Vec)->data), "incompatible array type"); \
+        phyto_vec_push_array(&(Vec)->base, Array, Count);                                   \
+    })
 #define PHYTO_VEC_FIND(Vec, Value, OutIndex)          \
     ({                                                \
-        typeof(Value) val = Value;                    \
+        typeof(*(Vec)->data) val = Value;             \
         phyto_vec_find(&(Vec)->base, &val, OutIndex); \
     })
 #define PHYTO_VEC_REMOVE(Vec, Value)          \
     ({                                        \
-        typeof(Value) val = Value;            \
+        typeof(*(Vec)->data) val = Value;     \
         phyto_vec_remove(&(Vec)->base, &val); \
     })
 #define PHYTO_VEC_REVERSE(Vec) phyto_vec_reverse(&(Vec)->base)
