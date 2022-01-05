@@ -17,6 +17,7 @@ Checks: |
   -bugprone-macro-parentheses,
   -cppcoreguidelines-init-variables,
   -bugprone-easily-swappable-parameters,
+  -readability-function-cognitive-complexity,
 WarningsAsErrors: ''
 CheckOptions:
   - key: 'bugprone-argument-comment.StrictMode'
