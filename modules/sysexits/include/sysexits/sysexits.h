@@ -24,7 +24,7 @@
 #define EX_NOPERM 77
 #define EX_CONFIG 78
 
-#define EX__MAX 78 // maximum listed value
+#define EX__MAX 78  // maximum listed value
 #endif
 
-#endif // SYSEXITS_SYSEXITS_H_
+#endif  // SYSEXITS_SYSEXITS_H_
