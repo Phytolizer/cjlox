@@ -78,11 +78,40 @@ PHYTO_TEST_FUNC(vec_swap_splice) {
     PHYTO_TEST_PASS();
 }
 
+PHYTO_TEST_FUNC(vec_insert) {
+    vec_int_t vec = PHYTO_VEC_INIT_DEFAULT(int, compare_ints);
+    for (int i = 0; i < 1000; ++i) {
+        PHYTO_VEC_INSERT(&vec, 0, i);
+    }
+    PHYTO_TEST_ASSERT(vec.data[0] == 999, PHYTO_VEC_FREE(&vec), "vec.data[0] == %d, expected 999",
+                      vec.data[0]);
+    PHYTO_TEST_ASSERT(vec.data[PHYTO_VEC_SIZE(&vec) - 1] == 0, PHYTO_VEC_FREE(&vec),
+                      "vec.data[PHYTO_VEC_SIZE(&vec) - 1] == %d, expected 0",
+                      vec.data[PHYTO_VEC_SIZE(&vec) - 1]);
+    PHYTO_VEC_INSERT(&vec, 10, 123);
+    PHYTO_TEST_ASSERT(vec.data[10] == 123, PHYTO_VEC_FREE(&vec), "vec.data[10] == %d, expected 123",
+                      vec.data[10]);
+    PHYTO_TEST_ASSERT(PHYTO_VEC_SIZE(&vec) == 1001, PHYTO_VEC_FREE(&vec),
+                      "PHYTO_VEC_SIZE(&vec) == %d, expected 1001", PHYTO_VEC_SIZE(&vec));
+    PHYTO_VEC_INSERT(&vec, PHYTO_VEC_SIZE(&vec) - 2, 678);
+    PHYTO_TEST_ASSERT(vec.data[999] == 678, PHYTO_VEC_FREE(&vec),
+                      "vec.data[999] == %d, expected 678", vec.data[999]);
+    PHYTO_TEST_ASSERT(PHYTO_VEC_INSERT(&vec, 10, 123), PHYTO_VEC_FREE(&vec),
+                      "PHYTO_VEC_INSERT(&vec, 10, 123) reported failure");
+    PHYTO_VEC_INSERT(&vec, PHYTO_VEC_SIZE(&vec), 789);
+    PHYTO_TEST_ASSERT(vec.data[PHYTO_VEC_SIZE(&vec) - 1] == 789, PHYTO_VEC_FREE(&vec),
+                      "vec.data[PHYTO_VEC_SIZE(&vec) - 1] == %d, expected 789",
+                      vec.data[PHYTO_VEC_SIZE(&vec) - 1]);
+    PHYTO_VEC_FREE(&vec);
+    PHYTO_TEST_PASS();
+}
+
 PHYTO_TEST_SUITE_FUNC(vec_tests) {
     PHYTO_TEST_RUN(vec_push);
     PHYTO_TEST_RUN(vec_pop);
     PHYTO_TEST_RUN(vec_splice);
     PHYTO_TEST_RUN(vec_swap_splice);
+    PHYTO_TEST_RUN(vec_insert);
 }
 
 int main(void) {

@@ -97,7 +97,7 @@ bool phyto_vec_insert(phyto_vec_t* vec, size_t index, const void* value) {
     if (index > vec->size) {
         return false;
     }
-    if (vec->size == vec->capacity && !phyto_vec_resize(vec, vec->size + 1)) {
+    if (vec->size == vec->capacity && !phyto_vec_reserve(vec, vec->size + 1)) {
         return false;
     }
     memmove(vec->data + (index + 1) * vec->configuration.element_size, vec->data + index,
