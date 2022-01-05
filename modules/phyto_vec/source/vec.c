@@ -86,15 +86,9 @@ bool phyto_vec_swap_splice(phyto_vec_t* vec, size_t index, size_t count) {
     if (count == 0) {
         return true;
     }
-    if (vec->size - count == index) {
-        vec->size -= count;
-        return true;
-    }
-    for (size_t i = 0; i < count / 2; i++) {
-        size_t j = index + i;
-        size_t k = index + count - i - 1;
-        phyto_vec_swap(vec, j, k);
-    }
+    memmove(vec->data + index * vec->configuration.element_size,
+            vec->data + (vec->size - count) * vec->configuration.element_size,
+            count * vec->configuration.element_size);
     vec->size -= count;
     return true;
 }
