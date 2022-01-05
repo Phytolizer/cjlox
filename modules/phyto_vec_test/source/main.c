@@ -1,9 +1,9 @@
 #include <inttypes.h>
 #include <phyto/test/test.h>
-#include <phyto/vec/vec.h>
+#include <phyto/vec/v2/vec.h>
 
-typedef PHYTO_VEC_WRAP(int) vec_int_t;
-typedef PHYTO_VEC_WRAP(double) vec_double_t;
+typedef PHYTO_VEC_TYPE(int) vec_int_t;
+typedef PHYTO_VEC_TYPE(double) vec_double_t;
 
 int compare_ints(const void* a, const void* b) {
     return *(int*)a - *(int*)b;
@@ -20,7 +20,8 @@ int compare_doubles(const void* a, const void* b) {
 }
 
 PHYTO_TEST_FUNC(vec_push) {
-    vec_int_t vec = PHYTO_VEC_INIT_DEFAULT(int, compare_ints);
+    vec_int_t vec;
+    PHYTO_VEC_INIT(&vec);
     for (int i = 0; i < 1000; ++i) {
         PHYTO_VEC_PUSH(&vec, i * 2);
     }
@@ -35,11 +36,12 @@ PHYTO_TEST_FUNC(vec_push) {
 }
 
 PHYTO_TEST_FUNC(vec_pop) {
-    vec_int_t vec = PHYTO_VEC_INIT_DEFAULT(int, compare_ints);
+    vec_int_t vec;
+    PHYTO_VEC_INIT(&vec);
     PHYTO_VEC_PUSH(&vec, 123);
     PHYTO_VEC_PUSH(&vec, 456);
     PHYTO_VEC_PUSH(&vec, 789);
-    int value;
+    int value = 0;
     PHYTO_VEC_POP(&vec, &value);
     PHYTO_TEST_ASSERT(value == 789, PHYTO_VEC_FREE(&vec), "value == %d, expected 789", value);
     PHYTO_VEC_POP(&vec, &value);
@@ -53,7 +55,8 @@ PHYTO_TEST_FUNC(vec_pop) {
 }
 
 PHYTO_TEST_FUNC(vec_splice) {
-    vec_int_t vec = PHYTO_VEC_INIT_DEFAULT(int, compare_ints);
+    vec_int_t vec;
+    PHYTO_VEC_INIT(&vec);
     for (int i = 0; i < 1000; ++i) {
         PHYTO_VEC_PUSH(&vec, i);
     }
@@ -63,67 +66,67 @@ PHYTO_TEST_FUNC(vec_splice) {
     PHYTO_VEC_SPLICE(&vec, 10, 10);
     PHYTO_TEST_ASSERT(vec.data[10] == 30, PHYTO_VEC_FREE(&vec), "vec.data[10] == %d, expected 30",
                       vec.data[10]);
-    PHYTO_VEC_SPLICE(&vec, PHYTO_VEC_SIZE(&vec) - 50, 50);
-    PHYTO_TEST_ASSERT(vec.data[PHYTO_VEC_SIZE(&vec) - 1] == 949, PHYTO_VEC_FREE(&vec),
+    PHYTO_VEC_SPLICE(&vec, vec.size - 50, 50);
+    PHYTO_TEST_ASSERT(vec.data[vec.size - 1] == 949, PHYTO_VEC_FREE(&vec),
                       "vec.data[PHYTO_VEC_SIZE(&vec) - 1] == %d, expected 949",
-                      vec.data[PHYTO_VEC_SIZE(&vec) - 1]);
+                      vec.data[vec.size - 1]);
     PHYTO_VEC_FREE(&vec);
     PHYTO_TEST_PASS();
 }
 
 PHYTO_TEST_FUNC(vec_swap_splice) {
-    vec_int_t vec = PHYTO_VEC_INIT_DEFAULT(int, compare_ints);
+    vec_int_t vec;
+    PHYTO_VEC_INIT(&vec);
     for (int i = 0; i < 10; ++i) {
         PHYTO_VEC_PUSH(&vec, i);
     }
-    PHYTO_VEC_SWAP_SPLICE(&vec, 0, 3);
+    PHYTO_VEC_SWAPSPLICE(&vec, 0, 3);
     PHYTO_TEST_ASSERT(vec.data[0] == 7 && vec.data[1] == 8 && vec.data[2] == 9,
                       PHYTO_VEC_FREE(&vec),
                       "vec.data[0] == %d, expected 7, vec.data[1] == %d, expected 8, vec.data[2] "
                       "== %d, expected 9",
                       vec.data[0], vec.data[1], vec.data[2]);
-    PHYTO_VEC_SWAP_SPLICE(&vec, PHYTO_VEC_SIZE(&vec) - 1, 1);
-    PHYTO_TEST_ASSERT(vec.data[PHYTO_VEC_SIZE(&vec) - 1] == 5, PHYTO_VEC_FREE(&vec),
-                      "vec.data[PHYTO_VEC_SIZE(&vec) - 1] == %d, expected 5",
-                      vec.data[PHYTO_VEC_SIZE(&vec) - 1]);
+    PHYTO_VEC_SWAPSPLICE(&vec, vec.size - 1, 1);
+    PHYTO_TEST_ASSERT(vec.data[vec.size - 1] == 5, PHYTO_VEC_FREE(&vec),
+                      "vec.data[vec.size - 1] == %d, expected 5", vec.data[vec.size - 1]);
     PHYTO_VEC_FREE(&vec);
     PHYTO_TEST_PASS();
 }
 
 PHYTO_TEST_FUNC(vec_insert) {
-    vec_int_t vec = PHYTO_VEC_INIT_DEFAULT(int, compare_ints);
+    vec_int_t vec;
+    PHYTO_VEC_INIT(&vec);
     for (int i = 0; i < 1000; ++i) {
         PHYTO_VEC_INSERT(&vec, 0, i);
     }
     PHYTO_TEST_ASSERT(vec.data[0] == 999, PHYTO_VEC_FREE(&vec), "vec.data[0] == %d, expected 999",
                       vec.data[0]);
-    PHYTO_TEST_ASSERT(vec.data[PHYTO_VEC_SIZE(&vec) - 1] == 0, PHYTO_VEC_FREE(&vec),
-                      "vec.data[PHYTO_VEC_SIZE(&vec) - 1] == %d, expected 0",
-                      vec.data[PHYTO_VEC_SIZE(&vec) - 1]);
+    PHYTO_TEST_ASSERT(vec.data[vec.size - 1] == 0, PHYTO_VEC_FREE(&vec),
+                      "vec.data[vec.size - 1] == %d, expected 0", vec.data[vec.size - 1]);
     PHYTO_VEC_INSERT(&vec, 10, 123);
     PHYTO_TEST_ASSERT(vec.data[10] == 123, PHYTO_VEC_FREE(&vec), "vec.data[10] == %d, expected 123",
                       vec.data[10]);
-    PHYTO_TEST_ASSERT(PHYTO_VEC_SIZE(&vec) == 1001, PHYTO_VEC_FREE(&vec),
-                      "PHYTO_VEC_SIZE(&vec) == %d, expected 1001", PHYTO_VEC_SIZE(&vec));
-    PHYTO_VEC_INSERT(&vec, PHYTO_VEC_SIZE(&vec) - 2, 678);
+    PHYTO_TEST_ASSERT(vec.size == 1001, PHYTO_VEC_FREE(&vec), "vec.size == %d, expected 1001",
+                      vec.size);
+    PHYTO_VEC_INSERT(&vec, vec.size - 2, 678);
     PHYTO_TEST_ASSERT(vec.data[999] == 678, PHYTO_VEC_FREE(&vec),
                       "vec.data[999] == %d, expected 678", vec.data[999]);
     PHYTO_TEST_ASSERT(PHYTO_VEC_INSERT(&vec, 10, 123), PHYTO_VEC_FREE(&vec),
                       "PHYTO_VEC_INSERT(&vec, 10, 123) reported failure");
-    PHYTO_VEC_INSERT(&vec, PHYTO_VEC_SIZE(&vec), 789);
-    PHYTO_TEST_ASSERT(vec.data[PHYTO_VEC_SIZE(&vec) - 1] == 789, PHYTO_VEC_FREE(&vec),
-                      "vec.data[PHYTO_VEC_SIZE(&vec) - 1] == %d, expected 789",
-                      vec.data[PHYTO_VEC_SIZE(&vec) - 1]);
+    PHYTO_VEC_INSERT(&vec, vec.size, 789);
+    PHYTO_TEST_ASSERT(vec.data[vec.size - 1] == 789, PHYTO_VEC_FREE(&vec),
+                      "vec.data[vec.size - 1] == %d, expected 789", vec.data[vec.size - 1]);
     PHYTO_VEC_FREE(&vec);
     PHYTO_TEST_PASS();
 }
 
 PHYTO_TEST_FUNC(vec_sort) {
-    vec_int_t vec = PHYTO_VEC_INIT_DEFAULT(int, compare_ints);
+    vec_int_t vec;
+    PHYTO_VEC_INIT(&vec);
     PHYTO_VEC_PUSH(&vec, 3);
     PHYTO_VEC_PUSH(&vec, -1);
     PHYTO_VEC_PUSH(&vec, 0);
-    PHYTO_VEC_SORT(&vec);
+    PHYTO_VEC_SORT(&vec, compare_ints);
     PHYTO_TEST_ASSERT(vec.data[0] == -1 && vec.data[1] == 0 && vec.data[2] == 3,
                       PHYTO_VEC_FREE(&vec),
                       "vec.data[0] == %d, expected -1, vec.data[1] == %d, expected 0, vec.data[2] "
@@ -134,7 +137,8 @@ PHYTO_TEST_FUNC(vec_sort) {
 }
 
 PHYTO_TEST_FUNC(vec_swap) {
-    vec_int_t vec = PHYTO_VEC_INIT_DEFAULT(int, compare_ints);
+    vec_int_t vec;
+    PHYTO_VEC_INIT(&vec);
     PHYTO_VEC_PUSH(&vec, 'a');
     PHYTO_VEC_PUSH(&vec, 'b');
     PHYTO_VEC_PUSH(&vec, 'c');
@@ -158,41 +162,42 @@ PHYTO_TEST_FUNC(vec_swap) {
 }
 
 PHYTO_TEST_FUNC(vec_truncate) {
-    vec_int_t vec = PHYTO_VEC_INIT_DEFAULT(int, compare_ints);
+    vec_int_t vec;
+    PHYTO_VEC_INIT(&vec);
     for (int i = 0; i < 1000; ++i) {
         PHYTO_VEC_PUSH(&vec, 0);
     }
     PHYTO_VEC_TRUNCATE(&vec, 10000);
-    PHYTO_TEST_ASSERT(PHYTO_VEC_SIZE(&vec) == 1000, PHYTO_VEC_FREE(&vec),
-                      "PHYTO_VEC_SIZE(&vec) == %d, expected 1000", PHYTO_VEC_SIZE(&vec));
+    PHYTO_TEST_ASSERT(vec.size == 1000, PHYTO_VEC_FREE(&vec), "vec.size == %d, expected 1000",
+                      vec.size);
     PHYTO_VEC_TRUNCATE(&vec, 900);
-    PHYTO_TEST_ASSERT(PHYTO_VEC_SIZE(&vec) == 900, PHYTO_VEC_FREE(&vec),
-                      "PHYTO_VEC_SIZE(&vec) == %d, expected 900", PHYTO_VEC_SIZE(&vec));
+    PHYTO_TEST_ASSERT(vec.size == 900, PHYTO_VEC_FREE(&vec), "vec.size == %d, expected 900",
+                      vec.size);
     PHYTO_VEC_FREE(&vec);
     PHYTO_TEST_PASS();
 }
 
 PHYTO_TEST_FUNC(vec_clear) {
-    vec_int_t vec = PHYTO_VEC_INIT_DEFAULT(int, compare_ints);
+    vec_int_t vec;
+    PHYTO_VEC_INIT(&vec);
     PHYTO_VEC_PUSH(&vec, 1);
     PHYTO_VEC_PUSH(&vec, 2);
     PHYTO_VEC_CLEAR(&vec);
-    PHYTO_TEST_ASSERT(PHYTO_VEC_SIZE(&vec) == 0, PHYTO_VEC_FREE(&vec),
-                      "PHYTO_VEC_SIZE(&vec) == %d, expected 0", PHYTO_VEC_SIZE(&vec));
+    PHYTO_TEST_ASSERT(vec.size == 0, PHYTO_VEC_FREE(&vec), "vec.size == %zu, expected 0", vec.size);
     PHYTO_VEC_FREE(&vec);
     PHYTO_TEST_PASS();
 }
 
 PHYTO_TEST_FUNC(vec_compact) {
-    vec_int_t vec = PHYTO_VEC_INIT_DEFAULT(int, compare_ints);
+    vec_int_t vec;
+    PHYTO_VEC_INIT(&vec);
     for (int i = 0; i < 1000; ++i) {
         PHYTO_VEC_PUSH(&vec, 0);
     }
     PHYTO_VEC_TRUNCATE(&vec, 3);
     PHYTO_VEC_COMPACT(&vec);
-    PHYTO_TEST_ASSERT(PHYTO_VEC_SIZE(&vec) == vec.base.capacity, PHYTO_VEC_FREE(&vec),
-                      "PHYTO_VEC_SIZE(&vec) == %zu, expected %zu", PHYTO_VEC_SIZE(&vec),
-                      vec.base.capacity);
+    PHYTO_TEST_ASSERT(vec.size == vec.capacity, PHYTO_VEC_FREE(&vec),
+                      "vec.size == %zu, expected %zu", vec.size, vec.capacity);
     PHYTO_TEST_ASSERT(PHYTO_VEC_COMPACT(&vec), PHYTO_VEC_FREE(&vec),
                       "PHYTO_VEC_COMPACT(&vec) reported failure");
     PHYTO_VEC_FREE(&vec);
@@ -200,8 +205,9 @@ PHYTO_TEST_FUNC(vec_compact) {
 }
 
 PHYTO_TEST_FUNC(vec_push_array) {
-    double arr[] = {5, 6, 7, 8, 9};
-    vec_double_t vec = PHYTO_VEC_INIT_DEFAULT(double, compare_doubles);
+    int arr[] = {5, 6, 7, 8, 9};
+    vec_double_t vec;
+    PHYTO_VEC_INIT(&vec);
     PHYTO_VEC_PUSH(&vec, 1);
     PHYTO_VEC_PUSH(&vec, 2);
     PHYTO_VEC_PUSH_ARRAY(&vec, arr, 5);
@@ -220,15 +226,16 @@ PHYTO_TEST_FUNC(vec_push_array) {
 }
 
 PHYTO_TEST_FUNC(vec_push_vec) {
-    vec_int_t v = PHYTO_VEC_INIT_DEFAULT(int, compare_ints);
-    vec_int_t v2 = PHYTO_VEC_INIT_DEFAULT(int, compare_ints);
+    vec_int_t v;
+    PHYTO_VEC_INIT(&v);
+    vec_int_t v2;
+    PHYTO_VEC_INIT(&v2);
     PHYTO_VEC_PUSH(&v, 12);
     PHYTO_VEC_PUSH(&v, 34);
     PHYTO_VEC_PUSH(&v2, 56);
     PHYTO_VEC_PUSH(&v2, 78);
-    PHYTO_VEC_PUSH_VEC(&v, &v2);
-    PHYTO_TEST_ASSERT(PHYTO_VEC_SIZE(&v) == 4, PHYTO_VEC_FREE(&v),
-                      "PHYTO_VEC_SIZE(&v) == %zu, expected 4", PHYTO_VEC_SIZE(&v));
+    PHYTO_VEC_EXTEND(&v, &v2);
+    PHYTO_TEST_ASSERT(v.size == 4, PHYTO_VEC_FREE(&v), "v.size == %zu, expected 4", v.size);
     PHYTO_TEST_ASSERT(v.data[0] == 12 && v.data[1] == 34 && v.data[2] == 56 && v.data[3] == 78,
                       PHYTO_VEC_FREE(&v),
                       "v.data[0] == %d, expected 12, v.data[1] == %d, expected 34, "
@@ -240,7 +247,8 @@ PHYTO_TEST_FUNC(vec_push_vec) {
 }
 
 PHYTO_TEST_FUNC(vec_find) {
-    vec_int_t v = PHYTO_VEC_INIT_DEFAULT(int, compare_ints);
+    vec_int_t v;
+    PHYTO_VEC_INIT(&v);
     for (int i = 0; i < 26; ++i) {
         PHYTO_VEC_PUSH(&v, 'a' + i);
     }
