@@ -93,17 +93,6 @@ declare_module(
     SOURCES main.c
     DEPENDS phyto_vec phyto_test
 )
-declare_module(
-    rxi_vec
-    KIND library
-    SOURCES vec.c
-)
-declare_module(
-    rxi_vec_test
-    KIND executable
-    SOURCES main.c
-    DEPENDS rxi_vec phyto_test
-)
 
 declare_module(
     lox
@@ -121,5 +110,4 @@ declare_module(
 if(PROJECT_IS_TOP_LEVEL)
     enable_testing()
     add_test(NAME phyto_vec_test COMMAND phyto_vec_test)
-    add_test(NAME rxi_vec_test COMMAND rxi_vec_test)
 endif()
