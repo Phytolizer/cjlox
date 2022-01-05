@@ -4,7 +4,7 @@
 Checks: |
   *,
   -google-readability-todo,
-  -altera-unroll-loops,
+  -altera-*,
   -fuchsia-*,
   fuchsia-multiple-inheritance,
   -llvm-header-guard,
@@ -12,9 +12,10 @@ Checks: |
   -llvmlibc-*,
   -misc-non-private-member-variables-in-classes,
   -modernize-use-trailing-return-type,
-  -altera-struct-pack-align,
   -readability-magic-numbers,
   -cppcoreguidelines-avoid-magic-numbers,
+  -bugprone-macro-parentheses,
+  -cppcoreguidelines-init-variables,
 WarningsAsErrors: ''
 CheckOptions:
   - key: 'bugprone-argument-comment.StrictMode'

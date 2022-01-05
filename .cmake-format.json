@@ -36,7 +36,7 @@
     "_help_line_width": ["How wide to allow formatted cmake files"],
     "line_width": 80,
     "_help_tab_size": ["How many spaces to tab for indent"],
-    "tab_size": 8,
+    "tab_size": 4,
     "_help_use_tabchars": [
       "If true, lines are indented using tab characters (utf-8",
       "0x09) instead of <tab_size> space characters (utf-8 0x20).",
@@ -44,7 +44,7 @@
       "character, the behavior of the  fractional indentation is",
       "governed by <fractional_tab_policy>"
     ],
-    "use_tabchars": true,
+    "use_tabchars": false,
     "_help_fractional_tab_policy": [
       "If <use_tabchars> is True, then the value of this variable",
       "indicates how fractional indentions are handled during",

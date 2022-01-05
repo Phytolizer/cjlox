@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-int32_t lox_run_file(const char *filename);
+int32_t lox_run_file(const char* filename);
 void lox_run_prompt(void);
 
-#endif // LOX_LOX_H_
+#endif  // LOX_LOX_H_
