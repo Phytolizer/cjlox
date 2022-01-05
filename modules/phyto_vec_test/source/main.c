@@ -1,3 +1,4 @@
+#include <inttypes.h>
 #include <phyto/test/test.h>
 #include <phyto/vec/vec.h>
 
@@ -133,5 +134,7 @@ PHYTO_TEST_SUITE_FUNC(vec_tests) {
 int main(void) {
     phyto_test_state_t state = {0};
     PHYTO_TEST_RUN_SUITE(vec_tests, &state);
+    printf("%" PRIu64 " tests, %" PRIu64 " assertions, %" PRIu64 " failures\n", state.tests_passed,
+           state.assert_count, state.tests_failed);
     return state.tests_failed != 0;
 }
