@@ -106,12 +106,28 @@ PHYTO_TEST_FUNC(vec_insert) {
     PHYTO_TEST_PASS();
 }
 
+PHYTO_TEST_FUNC(vec_sort) {
+    vec_int_t vec = PHYTO_VEC_INIT_DEFAULT(int, compare_ints);
+    PHYTO_VEC_PUSH(&vec, 3);
+    PHYTO_VEC_PUSH(&vec, -1);
+    PHYTO_VEC_PUSH(&vec, 0);
+    PHYTO_VEC_SORT(&vec);
+    PHYTO_TEST_ASSERT(vec.data[0] == -1 && vec.data[1] == 0 && vec.data[2] == 3,
+                      PHYTO_VEC_FREE(&vec),
+                      "vec.data[0] == %d, expected -1, vec.data[1] == %d, expected 0, vec.data[2] "
+                      "== %d, expected 3",
+                      vec.data[0], vec.data[1], vec.data[2]);
+    PHYTO_VEC_FREE(&vec);
+    PHYTO_TEST_PASS();
+}
+
 PHYTO_TEST_SUITE_FUNC(vec_tests) {
     PHYTO_TEST_RUN(vec_push);
     PHYTO_TEST_RUN(vec_pop);
     PHYTO_TEST_RUN(vec_splice);
     PHYTO_TEST_RUN(vec_swap_splice);
     PHYTO_TEST_RUN(vec_insert);
+    PHYTO_TEST_RUN(vec_sort);
 }
 
 int main(void) {
