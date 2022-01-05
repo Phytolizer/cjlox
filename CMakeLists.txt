@@ -57,9 +57,7 @@ function(declare_module NAME)
 		-fsanitize=address,undefined
 	)
 	target_link_options(
-		${DM_TARGET_NAME}
-		${DM_PUBLICITY}
-		-fsanitize=address,undefined
+		${DM_TARGET_NAME} ${DM_PUBLICITY} -fsanitize=address,undefined
 	)
 	if(DM_INTERNAL_INCLUDE)
 		target_include_directories(
