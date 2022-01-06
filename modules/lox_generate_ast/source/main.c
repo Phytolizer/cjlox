@@ -325,6 +325,18 @@ static void parse_def(parser_t* p, FILE* output) {
                 SV_PRN(tree_name));
     }
     phyto_string_t tree_name_upper = phyto_string_upper(tree_name);
+    for (size_t i = 0; i < nodes.size; ++i) {
+        phyto_string_t node_name_upper = phyto_string_upper(nodes.data[i].name);
+        fprintf(output,
+                "#define " NS_UPPER "_%" SV_FMT "_VISITOR_VISIT_%" SV_FMT "_FUNC(Name, T) \\\n",
+                STR_PRN(tree_name_upper), STR_PRN(node_name_upper));
+        phyto_string_free(&node_name_upper);
+        fprintf(output,
+                "    T Name##_visit_%" SV_FMT "_%" SV_FMT "(Name##_t* visitor, " NS "_%" SV_FMT
+                "_%" SV_FMT "_t* node)\n",
+                SV_PRN(nodes.data[i].name), SV_PRN(tree_name), SV_PRN(nodes.data[i].name),
+                SV_PRN(tree_name));
+    }
     fprintf(output, "#define " NS_UPPER "_%" SV_FMT "_VISITOR_DECL(Name, T) \\\n",
             STR_PRN(tree_name_upper));
     fprintf(output, "    T " NS "_%" SV_FMT "_accept_##Name(" NS "_%" SV_FMT "_t* node); \\\n",
@@ -335,11 +347,10 @@ static void parse_def(parser_t* p, FILE* output) {
                 "_t* self, Name##_t* visitor); \\\n",
                 SV_PRN(nodes.data[i].name), SV_PRN(tree_name), SV_PRN(nodes.data[i].name),
                 SV_PRN(tree_name));
-        fprintf(output,
-                "    T Name##_visit_%" SV_FMT "_%" SV_FMT "(Name##_t* visitor, " NS "_%" SV_FMT
-                "_%" SV_FMT "_t* node)",
-                SV_PRN(nodes.data[i].name), SV_PRN(tree_name), SV_PRN(nodes.data[i].name),
-                SV_PRN(tree_name));
+        phyto_string_t node_name_upper = phyto_string_upper(nodes.data[i].name);
+        fprintf(output, "    " NS_UPPER "_%" SV_FMT "_VISITOR_VISIT_%" SV_FMT "_FUNC(Name, T)",
+                STR_PRN(tree_name_upper), STR_PRN(node_name_upper));
+        phyto_string_free(&node_name_upper);
         if (i < nodes.size - 1) {
             fprintf(output, "; \\");
         }
@@ -423,10 +434,6 @@ int main(int argc, char** argv) {
     if (toks.size == 0) {
         fprintf(stderr, "Failed to lex input file: %s (no tokens)\n", argv[1]);
         return 1;
-    }
-
-    for (size_t i = 0; i < toks.size; ++i) {
-        printf("{%s: %" STR_FMT "}\n", ttype_names[toks.data[i].type], STR_PRN(toks.data[i].text));
     }
 
     parse_file(&toks, output);
