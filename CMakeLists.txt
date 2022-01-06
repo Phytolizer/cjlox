@@ -117,6 +117,7 @@ declare_module(
             ends_with.c
             main.c
             own.c
+            starts_with.c
     DEPENDS phyto_string phyto_test
 )
 

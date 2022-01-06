@@ -10,6 +10,7 @@
 #include "phyto/string_test/count.h"
 #include "phyto/string_test/ends_with.h"
 #include "phyto/string_test/own.h"
+#include "phyto/string_test/starts_with.h"
 
 void all_tests(phyto_test_state_t* state) {
     PHYTO_TEST_RUN_SUITE(append_fill, state);
@@ -19,6 +20,7 @@ void all_tests(phyto_test_state_t* state) {
     PHYTO_TEST_RUN_SUITE(count, state);
     PHYTO_TEST_RUN_SUITE(ends_with, state);
     PHYTO_TEST_RUN_SUITE(own, state);
+    PHYTO_TEST_RUN_SUITE(starts_with, state);
 }
 
 int main(void) {
