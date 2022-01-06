@@ -272,13 +272,118 @@ PHYTO_TEST_FUNC(one) {
     PHYTO_TEST_PASS();
 }
 
+PHYTO_TEST_SUBTEST_FUNC(insert_alphabet, int_map_t* map) {
+    for (int x = 'a'; x <= 'z'; ++x) {
+        char cx = (char)x;
+        PHYTO_TEST_ASSERT(int_map_insert(map, phyto_string_view_from_ptr_length(&cx, 1), x + 42),
+                          int_map_free(map), "int_map_insert() failed");
+    }
+    PHYTO_TEST_SUBTEST_PASS();
+}
+
+PHYTO_TEST_FUNC(many) {
+    int_map_t* map = int_map_new(10, phyto_hash_default_load, &default_key_ops, &default_value_ops);
+    PHYTO_TEST_ASSERT(map != NULL, (void)0, "int_map_new() failed");
+    PHYTO_TEST_RUN_SUBTEST(insert_alphabet, int_map_free(map), map);
+    int_map_iter_t iter = int_map_iter_start(map);
+    PHYTO_TEST_ASSERT(int_map_iter_at_start(&iter), int_map_free(map),
+                      "int_map_iter_at_start() failed");
+    for (size_t i = 0; i < 26; ++i) {
+        phyto_string_view_t k = int_map_iter_key(&iter);
+        int v = int_map_iter_value(&iter);
+        PHYTO_TEST_ASSERT(k.size == 1, int_map_free(map), "int_map_iter_key() wasn't 1 byte");
+        PHYTO_TEST_ASSERT(k.begin[0] >= 'a' && k.begin[0] <= 'z', int_map_free(map),
+                          "int_map_iter_key() wasn't a letter");
+        PHYTO_TEST_ASSERT(v == (int)(k.begin[0]) + 42, int_map_free(map),
+                          "int_map_iter_value() wasn't the correct value");
+        int_map_iter_next(&iter);
+    }
+    PHYTO_TEST_ASSERT(int_map_iter_at_end(&iter), int_map_free(map),
+                      "int_map_iter_at_end() failed");
+    PHYTO_TEST_ASSERT(!int_map_iter_next(&iter), int_map_free(map),
+                      "int_map_iter_next() succeeded");
+    int_map_free(map);
+    PHYTO_TEST_PASS();
+}
+
+PHYTO_TEST_FUNC(reverse) {
+    int_map_t* map = int_map_new(10, phyto_hash_default_load, &djb2_key_ops, &default_value_ops);
+    PHYTO_TEST_ASSERT(map != NULL, (void)0, "int_map_new() failed");
+    PHYTO_TEST_RUN_SUBTEST(insert_alphabet, int_map_free(map), map);
+    int_map_iter_t iter = int_map_iter_end(map);
+    PHYTO_TEST_ASSERT(int_map_iter_at_end(&iter), int_map_free(map),
+                      "int_map_iter_at_end() failed");
+    for (size_t i = 0; i < 26; ++i) {
+        phyto_string_view_t k = int_map_iter_key(&iter);
+        int v = int_map_iter_value(&iter);
+        PHYTO_TEST_ASSERT(k.size == 1, int_map_free(map), "int_map_iter_key() wasn't 1 byte");
+        PHYTO_TEST_ASSERT(k.begin[0] >= 'a' && k.begin[0] <= 'z', int_map_free(map),
+                          "int_map_iter_key() wasn't a letter");
+        PHYTO_TEST_ASSERT(v == (int)(k.begin[0]) + 42, int_map_free(map),
+                          "int_map_iter_value() wasn't the correct value");
+        int_map_iter_prev(&iter);
+    }
+    PHYTO_TEST_ASSERT(int_map_iter_at_start(&iter), int_map_free(map),
+                      "int_map_iter_at_start() failed");
+    int_map_free(map);
+    PHYTO_TEST_PASS();
+}
+
+PHYTO_TEST_FUNC(steps) {
+    int_map_t* map = int_map_new(10, phyto_hash_default_load, &djb2_key_ops, &default_value_ops);
+    PHYTO_TEST_ASSERT(map != NULL, (void)0, "int_map_new() failed");
+    PHYTO_TEST_RUN_SUBTEST(insert_alphabet, int_map_free(map), map);
+    int_map_iter_t iter = int_map_iter_start(map);
+    PHYTO_TEST_ASSERT(int_map_iter_at_start(&iter), int_map_free(map),
+                      "int_map_iter_at_start() failed");
+    for (size_t i = 0; !int_map_iter_at_end(&iter); ++i) {
+        phyto_string_view_t k = int_map_iter_key(&iter);
+        int v = int_map_iter_value(&iter);
+        PHYTO_TEST_ASSERT(k.size == 1, int_map_free(map), "int_map_iter_key() wasn't 1 byte");
+        PHYTO_TEST_ASSERT(k.begin[0] >= 'a' && k.begin[0] <= 'z', int_map_free(map),
+                          "int_map_iter_key() wasn't a letter");
+        PHYTO_TEST_ASSERT(v == (int)(k.begin[0]) + 42, int_map_free(map),
+                          "int_map_iter_value() wasn't the correct value");
+        if (!int_map_iter_advance(&iter, 2)) {
+            int_map_iter_next(&iter);
+        }
+    }
+    PHYTO_TEST_ASSERT(int_map_iter_at_end(&iter), int_map_free(map),
+                      "int_map_iter_at_end() failed");
+    PHYTO_TEST_ASSERT(!int_map_iter_next(&iter), int_map_free(map),
+                      "int_map_iter_next() succeeded");
+    int_map_free(map);
+    PHYTO_TEST_PASS();
+}
+
+PHYTO_TEST_FUNC(go_to) {
+    int_map_t* map = int_map_new(10, phyto_hash_default_load, &djb2_key_ops, &default_value_ops);
+    PHYTO_TEST_ASSERT(map != NULL, (void)0, "int_map_new() failed");
+    PHYTO_TEST_RUN_SUBTEST(insert_alphabet, int_map_free(map), map);
+    int_map_iter_t iter = int_map_iter_start(map);
+    PHYTO_TEST_ASSERT(int_map_iter_at_start(&iter), int_map_free(map),
+                      "int_map_iter_at_start() failed");
+    for (size_t i = 0; i < 26; ++i) {
+        phyto_string_view_t k = int_map_iter_key(&iter);
+        int v = int_map_iter_value(&iter);
+        PHYTO_TEST_ASSERT(k.size == 1, int_map_free(map), "int_map_iter_key() wasn't 1 byte");
+        PHYTO_TEST_ASSERT(k.begin[0] >= 'a' && k.begin[0] <= 'z', int_map_free(map),
+                          "int_map_iter_key() wasn't a letter");
+        PHYTO_TEST_ASSERT(v == (int)(k.begin[0]) + 42, int_map_free(map),
+                          "int_map_iter_value() wasn't the correct value");
+        int_map_iter_go_to(&iter, i);
+    }
+    int_map_free(map);
+    PHYTO_TEST_PASS();
+}
+
 PHYTO_TEST_SUITE_FUNC(iteration) {
     PHYTO_TEST_RUN(empty);
     PHYTO_TEST_RUN(one);
-    // PHYTO_TEST_RUN(many);
-    // PHYTO_TEST_RUN(reverse);
-    // PHYTO_TEST_RUN(steps);
-    // PHYTO_TEST_RUN(go_to);
+    PHYTO_TEST_RUN(many);
+    PHYTO_TEST_RUN(reverse);
+    PHYTO_TEST_RUN(steps);
+    PHYTO_TEST_RUN(go_to);
 }
 
 int main(void) {
