@@ -5,6 +5,7 @@
 #include <phyto/vec/vec.h>
 #include <stdarg.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 typedef PHYTO_VEC_TYPE(char) phyto_string_t;
 typedef PHYTO_VEC_TYPE(phyto_string_t) phyto_string_vec_t;
@@ -18,6 +19,7 @@ phyto_string_t phyto_string_own(phyto_string_view_t view);
 phyto_string_t phyto_string_from_c(const char* str);
 phyto_string_t phyto_string_from_sprintf(const char* format, ...);
 phyto_string_t phyto_string_copy(phyto_string_t str);
+int32_t phyto_string_compare(phyto_string_view_t lhs, phyto_string_view_t rhs);
 bool phyto_string_reserve(phyto_string_t* string, size_t capacity);
 bool phyto_string_append_fill(phyto_string_t* string, size_t count, char fill);
 

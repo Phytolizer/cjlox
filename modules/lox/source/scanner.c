@@ -92,6 +92,17 @@ static void number(lox_scanner_t* scanner) {
                       lox_object_new_double(strtod(scanner->source.begin + scanner->start, NULL)));
 }
 
+static void identifier(lox_scanner_t* scanner) {
+    while (nonstd_isalnum(peek(scanner)) || peek(scanner) == '_') {
+        advance(scanner);
+    }
+
+    phyto_string_view_t value =
+        phyto_string_view_substr(scanner->source, scanner->start, scanner->current);
+    // TODO
+    (void)value;
+}
+
 static void scan_token(lox_scanner_t* scanner) {
     char c = advance(scanner);
     switch (c) {
@@ -163,6 +174,8 @@ static void scan_token(lox_scanner_t* scanner) {
         default:
             if (nonstd_isdigit(c)) {
                 number(scanner);
+            } else if (nonstd_isalpha(c) || c == '_') {
+                identifier(scanner);
             } else {
                 lox_error(scanner->ctx, scanner->line,
                           phyto_string_view_from_c("Unexpected character."));

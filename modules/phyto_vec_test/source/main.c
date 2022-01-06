@@ -234,7 +234,7 @@ PHYTO_TEST_FUNC(vec_push_vec) {
     PHYTO_VEC_PUSH(&v, 34);
     PHYTO_VEC_PUSH(&v2, 56);
     PHYTO_VEC_PUSH(&v2, 78);
-    PHYTO_VEC_EXTEND(&v, &v2);
+    PHYTO_VEC_EXTEND(&v, v2);
     PHYTO_TEST_ASSERT(v.size == 4, PHYTO_VEC_FREE(&v), "v.size == %zu, expected 4", v.size);
     PHYTO_TEST_ASSERT(v.data[0] == 12 && v.data[1] == 34 && v.data[2] == 56 && v.data[3] == 78,
                       PHYTO_VEC_FREE(&v),

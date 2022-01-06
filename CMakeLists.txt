@@ -128,6 +128,20 @@ declare_module(
 )
 
 declare_module(
+    phyto_hash
+    KIND library
+    SOURCES hash.c
+    DEPENDS phyto_string phyto_string_view phyto_span
+)
+
+declare_module(
+    phyto_hash_test
+    KIND executable
+    SOURCES main.c
+    DEPENDS phyto_hash phyto_test
+)
+
+declare_module(
     phyto_io
     KIND library
     SOURCES io.c

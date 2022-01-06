@@ -20,6 +20,7 @@ Checks: |
   -readability-function-cognitive-complexity,
   -hicpp-signed-bitwise,
   -android-cloexec-fopen,
+  -misc-no-recursion,
 WarningsAsErrors: ''
 CheckOptions:
   - key: 'bugprone-argument-comment.StrictMode'

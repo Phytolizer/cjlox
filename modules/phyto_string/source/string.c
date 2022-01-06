@@ -42,6 +42,16 @@ phyto_string_t phyto_string_copy(phyto_string_t str) {
     return result;
 }
 
+int32_t phyto_string_compare(phyto_string_view_t lhs, phyto_string_view_t rhs) {
+    if (lhs.size < rhs.size) {
+        return -1;
+    }
+    if (lhs.size > rhs.size) {
+        return 1;
+    }
+    return memcmp(lhs.begin, rhs.begin, lhs.size);
+}
+
 bool phyto_string_reserve(phyto_string_t* string, size_t capacity) {
     return PHYTO_VEC_RESERVE(string, capacity);
 }
