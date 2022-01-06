@@ -1,5 +1,6 @@
 #include "lox/object.h"
 
+#include <assert.h>
 #include <inttypes.h>
 #include <phyto/string/string.h>
 
@@ -85,4 +86,6 @@ phyto_string_t lox_object_to_string(lox_object_t obj) {
         return stringify_##y##_object(obj);
         LOX_OBJECT_TYPES_XY
     }
+
+    assert(false && "corrupt object type");
 }
