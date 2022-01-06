@@ -1,19 +1,48 @@
 #include "lox/scanner.h"
 
+#include <stdbool.h>
 #include <stdlib.h>
 
 #include "lox/lox.h"
 #include "lox/object.h"
 #include "lox/token_type.h"
+#include "nonstd/ctype.h"
 #include "phyto/string_view/string_view.h"
 
 static bool is_at_end(lox_scanner_t* scanner) {
     return scanner->current >= scanner->source.size;
 }
 
+static char peek(lox_scanner_t* scanner) {
+    if (is_at_end(scanner)) {
+        return '\0';
+    }
+    return scanner->source.begin[scanner->current];
+}
+
+static char peek_next(lox_scanner_t* scanner) {
+    if (scanner->current + 1 >= scanner->source.size) {
+        return '\0';
+    }
+    return scanner->source.begin[scanner->current + 1];
+}
+
 static char advance(lox_scanner_t* scanner) {
     scanner->current++;
     return scanner->source.begin[scanner->current - 1];
+}
+
+static bool match(lox_scanner_t* scanner, char expected) {
+    if (is_at_end(scanner)) {
+        return false;
+    }
+
+    if (scanner->source.begin[scanner->current] != expected) {
+        return false;
+    }
+
+    scanner->current++;
+    return true;
 }
 
 static void add_token_literal(lox_scanner_t* scanner, lox_token_type_t type, lox_object_t literal) {
@@ -25,6 +54,42 @@ static void add_token_literal(lox_scanner_t* scanner, lox_token_type_t type, lox
 
 static void add_token(lox_scanner_t* scanner, lox_token_type_t type) {
     add_token_literal(scanner, type, lox_object_new_nil());
+}
+
+static void string(lox_scanner_t* scanner) {
+    while (peek(scanner) != '"' && !is_at_end(scanner)) {
+        if (peek(scanner) == '\n') {
+            scanner->line++;
+        }
+        advance(scanner);
+    }
+
+    if (is_at_end(scanner)) {
+        lox_error(scanner->ctx, scanner->line, phyto_string_view_from_c("Unterminated string."));
+        return;
+    }
+
+    advance(scanner);
+    phyto_string_t value = phyto_string_own(
+        phyto_string_view_substr(scanner->source, scanner->start + 1, scanner->current - 1));
+    add_token_literal(scanner, LOX_TOKEN_TYPE_STRING, lox_object_new_string(value));
+}
+
+static void number(lox_scanner_t* scanner) {
+    while (nonstd_isdigit(peek(scanner))) {
+        advance(scanner);
+    }
+
+    if (peek(scanner) == '.' && nonstd_isdigit(peek_next(scanner))) {
+        advance(scanner);
+
+        while (nonstd_isdigit(peek(scanner))) {
+            advance(scanner);
+        }
+    }
+
+    add_token_literal(scanner, LOX_TOKEN_TYPE_NUMBER,
+                      lox_object_new_double(strtod(scanner->source.begin + scanner->start, NULL)));
 }
 
 static void scan_token(lox_scanner_t* scanner) {
@@ -60,9 +125,48 @@ static void scan_token(lox_scanner_t* scanner) {
         case '*':
             add_token(scanner, LOX_TOKEN_TYPE_STAR);
             break;
+        case '!':
+            add_token(scanner,
+                      match(scanner, '=') ? LOX_TOKEN_TYPE_BANG_EQUAL : LOX_TOKEN_TYPE_BANG);
+            break;
+        case '=':
+            add_token(scanner,
+                      match(scanner, '=') ? LOX_TOKEN_TYPE_EQUAL_EQUAL : LOX_TOKEN_TYPE_EQUAL);
+            break;
+        case '<':
+            add_token(scanner,
+                      match(scanner, '=') ? LOX_TOKEN_TYPE_LESS_EQUAL : LOX_TOKEN_TYPE_LESS);
+            break;
+        case '>':
+            add_token(scanner,
+                      match(scanner, '=') ? LOX_TOKEN_TYPE_GREATER_EQUAL : LOX_TOKEN_TYPE_GREATER);
+            break;
+        case '/':
+            if (match(scanner, '/')) {
+                while (peek(scanner) != '\n' && !is_at_end(scanner)) {
+                    advance(scanner);
+                }
+            } else {
+                add_token(scanner, LOX_TOKEN_TYPE_SLASH);
+            }
+            break;
+        case ' ':
+        case '\r':
+        case '\t':
+            break;
+        case '\n':
+            scanner->line++;
+            break;
+        case '"':
+            string(scanner);
+            break;
         default:
-            lox_error(scanner->ctx, scanner->line,
-                      phyto_string_view_from_c("Unexpected character."));
+            if (nonstd_isdigit(c)) {
+                number(scanner);
+            } else {
+                lox_error(scanner->ctx, scanner->line,
+                          phyto_string_view_from_c("Unexpected character."));
+            }
             break;
     }
 }

@@ -28,17 +28,33 @@ static void free_boolean_object(lox_object_t* obj) {
     (void)obj;
 }
 
+static void free_string_object(lox_object_t* obj) {
+    phyto_string_free(&obj->string_value);
+}
+
+static void free_double_object(lox_object_t* obj) {
+    (void)obj;
+}
+
 static phyto_string_t stringify_nil_object(lox_object_t obj) {
     (void)obj;
     return phyto_string_from_c("nil");
 }
 
 static phyto_string_t stringify_integer_object(lox_object_t obj) {
-    return phyto_string_from_sprintf("%" PRIu64, obj.integer);
+    return phyto_string_from_sprintf("%" PRIu64, obj.integer_value);
 }
 
 static phyto_string_t stringify_boolean_object(lox_object_t obj) {
-    return phyto_string_from_c(obj.boolean ? "true" : "false");
+    return phyto_string_from_c(obj.boolean_value ? "true" : "false");
+}
+
+static phyto_string_t stringify_string_object(lox_object_t obj) {
+    return phyto_string_copy(obj.string_value);
+}
+
+static phyto_string_t stringify_double_object(lox_object_t obj) {
+    return phyto_string_from_sprintf("%g", obj.double_value);
 }
 
 phyto_string_view_t lox_object_type_name(lox_object_type_t type) {
@@ -55,7 +71,7 @@ lox_object_t lox_object_new_nil(void) {
 lox_object_t lox_object_new_integer(int64_t value) {
     lox_object_t obj = {
         .type = LOX_OBJECT_TYPE_INTEGER,
-        .integer = value,
+        .integer_value = value,
     };
     return obj;
 }
@@ -63,7 +79,23 @@ lox_object_t lox_object_new_integer(int64_t value) {
 lox_object_t lox_object_new_boolean(bool value) {
     lox_object_t obj = {
         .type = LOX_OBJECT_TYPE_BOOLEAN,
-        .boolean = value,
+        .boolean_value = value,
+    };
+    return obj;
+}
+
+lox_object_t lox_object_new_string(phyto_string_t value) {
+    lox_object_t obj = {
+        .type = LOX_OBJECT_TYPE_STRING,
+        .string_value = value,
+    };
+    return obj;
+}
+
+lox_object_t lox_object_new_double(double value) {
+    lox_object_t obj = {
+        .type = LOX_OBJECT_TYPE_DOUBLE,
+        .double_value = value,
     };
     return obj;
 }

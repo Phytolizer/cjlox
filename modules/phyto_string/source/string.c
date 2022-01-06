@@ -36,6 +36,12 @@ phyto_string_t phyto_string_from_sprintf(const char* format, ...) {
     return str;
 }
 
+phyto_string_t phyto_string_copy(phyto_string_t str) {
+    phyto_string_t result = phyto_string_new();
+    PHYTO_VEC_EXTEND(&result, str);
+    return result;
+}
+
 bool phyto_string_reserve(phyto_string_t* string, size_t capacity) {
     return PHYTO_VEC_RESERVE(string, capacity);
 }

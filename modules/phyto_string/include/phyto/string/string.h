@@ -17,6 +17,7 @@ phyto_string_t phyto_string_new(void);
 phyto_string_t phyto_string_own(phyto_string_view_t view);
 phyto_string_t phyto_string_from_c(const char* str);
 phyto_string_t phyto_string_from_sprintf(const char* format, ...);
+phyto_string_t phyto_string_copy(phyto_string_t str);
 bool phyto_string_reserve(phyto_string_t* string, size_t capacity);
 bool phyto_string_append_fill(phyto_string_t* string, size_t count, char fill);
 

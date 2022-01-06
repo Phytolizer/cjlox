@@ -102,7 +102,7 @@ typedef struct {
         }                                                               \
     } while (0)
 
-#define PHYTO_VEC_EXTEND(V, V2) PHYTO_VEC_PUSH_ARRAY((V), (V2)->data, (V2)->size)
+#define PHYTO_VEC_EXTEND(V, V2) PHYTO_VEC_PUSH_ARRAY((V), (V2).data, (V2).size)
 
 #define PHYTO_VEC_FIND(V, Val, Idx)                        \
     ({                                                     \
