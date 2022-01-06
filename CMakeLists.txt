@@ -129,4 +129,5 @@ declare_module(
 if(PROJECT_IS_TOP_LEVEL)
     enable_testing()
     add_test(NAME phyto_vec_test COMMAND phyto_vec_test)
+    add_test(NAME phyto_string_test COMMAND phyto_string_test)
 endif()
