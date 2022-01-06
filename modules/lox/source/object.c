@@ -88,4 +88,5 @@ phyto_string_t lox_object_to_string(lox_object_t obj) {
     }
 
     assert(false && "corrupt object type");
+    return phyto_string_new();
 }
