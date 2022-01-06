@@ -30,6 +30,8 @@ typedef PHYTO_SPAN_TYPE(uint64_t) phyto_hash_prime_span_t;
 
 phyto_hash_prime_span_t phyto_hash_prime_span(void);
 
+extern const double phyto_hash_default_load;
+
 #define PHYTO_HASH_DECL(Name, V)                                                               \
     typedef enum {                                                                             \
         Name##_entry_state_deleted,                                                            \
@@ -57,11 +59,11 @@ phyto_hash_prime_span_t phyto_hash_prime_span(void);
         size_t count;                                                                          \
         double load;                                                                           \
         phyto_hash_flag_t flag;                                                                \
-        Name##_key_ops_t* key_ops;                                                             \
-        Name##_value_ops_t* value_ops;                                                         \
+        const Name##_key_ops_t* key_ops;                                                             \
+        const Name##_value_ops_t* value_ops;                                                         \
     } Name##_t;                                                                                \
-    Name##_t* Name##_new(size_t capacity, double load, Name##_key_ops_t* key_ops,              \
-                         Name##_value_ops_t* value_ops);                                       \
+    Name##_t* Name##_new(size_t capacity, double load, const Name##_key_ops_t* key_ops,        \
+                         const Name##_value_ops_t* value_ops);                                 \
     void Name##_clear(Name##_t* map);                                                          \
     void Name##_free(Name##_t* map);                                                           \
     bool Name##_insert(Name##_t* map, phyto_string_view_t key, V value);                       \
@@ -85,8 +87,8 @@ phyto_hash_prime_span_t phyto_hash_prime_span(void);
 #define PHYTO_HASH_IMPL(Name, V)                                                                \
     static Name##_entry_t* Name##_impl_get_entry(Name##_t* map, phyto_string_view_t key);       \
     static size_t Name##_impl_calculate_size(size_t required);                                  \
-    Name##_t* Name##_new(size_t capacity, double load, Name##_key_ops_t* key_ops,               \
-                         Name##_value_ops_t* value_ops) {                                       \
+    Name##_t* Name##_new(size_t capacity, double load, const Name##_key_ops_t* key_ops,         \
+                         const Name##_value_ops_t* value_ops) {                                 \
         if (capacity == 0 || load <= 0 || load >= 1) {                                          \
             return NULL;                                                                        \
         }                                                                                       \

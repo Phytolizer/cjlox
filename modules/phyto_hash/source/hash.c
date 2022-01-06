@@ -1,5 +1,7 @@
 #include "phyto/hash/hash.h"
 
+const double phyto_hash_default_load = 0.75;
+
 static const char* const hash_flag_descriptions[] = {
 #define X(x, y) y,
     PHYTO_HASH_FLAGS_X
