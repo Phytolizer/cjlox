@@ -1,9 +1,16 @@
 #ifndef LOX_LOX_H_
 #define LOX_LOX_H_
 
+#include <phyto/string_view/string_view.h>
+#include <stdbool.h>
 #include <stdint.h>
 
-int32_t lox_run_file(const char* filename);
-void lox_run_prompt(void);
+typedef struct {
+    bool had_error;
+} lox_context_t;
+
+int32_t lox_run_file(lox_context_t* ctx, const char* filename);
+void lox_run_prompt(lox_context_t* ctx);
+void lox_error(lox_context_t* ctx, uint64_t line, phyto_string_view_t message);
 
 #endif  // LOX_LOX_H_

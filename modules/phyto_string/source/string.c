@@ -3,6 +3,7 @@
 #include <nonstd/ctype.h>
 #include <phyto/string_view/string_view.h>
 #include <stdarg.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 phyto_string_t phyto_string_new(void) {
@@ -19,6 +20,20 @@ phyto_string_t phyto_string_own(phyto_string_view_t view) {
 
 phyto_string_t phyto_string_from_c(const char* str) {
     return phyto_string_own(phyto_string_view_from_c(str));
+}
+
+phyto_string_t phyto_string_from_sprintf(const char* format, ...) {
+    va_list args;
+    va_start(args, format);
+    int length = vsnprintf(NULL, 0, format, args);
+    va_end(args);
+    phyto_string_t str = phyto_string_new();
+    phyto_string_reserve(&str, (size_t)length + 1);
+    va_start(args, format);
+    vsnprintf(str.data, (size_t)length + 1, format, args);
+    va_end(args);
+    str.size = length;
+    return str;
 }
 
 bool phyto_string_reserve(phyto_string_t* string, size_t capacity) {

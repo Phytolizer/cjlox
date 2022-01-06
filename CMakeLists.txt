@@ -137,8 +137,8 @@ declare_module(
 declare_module(
     lox
     KIND library
-    SOURCES lox.c
-    DEPENDS sysexits
+    SOURCES lox.c object.c scanner.c token_type.c token.c
+    DEPENDS sysexits phyto_io phyto_string
 )
 declare_module(
     cjlox

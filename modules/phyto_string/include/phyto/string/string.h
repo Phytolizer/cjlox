@@ -11,10 +11,12 @@ typedef PHYTO_VEC_TYPE(phyto_string_t) phyto_string_vec_t;
 
 #define PHYTO_STRING_FORMAT ".*s"
 #define PHYTO_STRING_PRINTF_ARGS(Str) (int)(Str).size, (Str).data
+#define PHYTO_STRING_VIEW_PRINTF_ARGS(Sview) (int)(Sview).size, (Sview).begin
 
 phyto_string_t phyto_string_new(void);
 phyto_string_t phyto_string_own(phyto_string_view_t view);
 phyto_string_t phyto_string_from_c(const char* str);
+phyto_string_t phyto_string_from_sprintf(const char* format, ...);
 bool phyto_string_reserve(phyto_string_t* string, size_t capacity);
 bool phyto_string_append_fill(phyto_string_t* string, size_t count, char fill);
 
