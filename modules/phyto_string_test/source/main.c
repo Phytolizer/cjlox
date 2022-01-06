@@ -7,6 +7,7 @@
 #include "phyto/string_test/append_view.h"
 #include "phyto/string_test/capitalize.h"
 #include "phyto/string_test/center.h"
+#include "phyto/string_test/count.h"
 #include "phyto/string_test/own.h"
 
 void all_tests(phyto_test_state_t* state) {
@@ -15,6 +16,7 @@ void all_tests(phyto_test_state_t* state) {
     PHYTO_TEST_RUN_SUITE(string_append_view, state);
     PHYTO_TEST_RUN_SUITE(string_capitalize, state);
     PHYTO_TEST_RUN_SUITE(string_center, state);
+    PHYTO_TEST_RUN_SUITE(string_count, state);
 }
 
 int main(void) {

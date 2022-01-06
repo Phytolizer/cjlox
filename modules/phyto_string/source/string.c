@@ -85,9 +85,18 @@ size_t phyto_string_count_in_range(phyto_string_view_t view,
                                    phyto_string_view_t sub,
                                    size_t start,
                                    size_t end) {
+    if (sub.size == 0) {
+        return 0;
+    }
+    if (start > end) {
+        return 0;
+    }
+    if (end - start < sub.size) {
+        return 0;
+    }
     size_t count = 0;
     size_t sub_size = sub.size;
-    for (size_t i = start; i < end - sub_size; ++i) {
+    for (size_t i = start; i <= end - sub_size; ++i) {
         if (memcmp(view.begin + i, sub.begin, sub_size) == 0) {
             ++count;
         }
