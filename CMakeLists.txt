@@ -109,7 +109,7 @@ declare_module(
 declare_module(
     phyto_string_test
     KIND executable
-    SOURCES append_fill.c append_view.c capitalize.c main.c own.c
+    SOURCES append_fill.c append_view.c capitalize.c center.c main.c own.c
     DEPENDS phyto_string phyto_test
 )
 

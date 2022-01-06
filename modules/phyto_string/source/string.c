@@ -62,6 +62,9 @@ phyto_string_t phyto_string_capitalize(phyto_string_view_t view) {
 
 phyto_string_t phyto_string_center(phyto_string_view_t view, size_t width, char fill) {
     phyto_string_t result = phyto_string_new();
+    if (view.size >= width) {
+        return phyto_string_own(view);
+    }
     size_t left_padding = (width - view.size) / 2;
     size_t right_padding = width - view.size - left_padding;
     for (size_t i = 0; i < left_padding; ++i) {
