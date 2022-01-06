@@ -21,6 +21,7 @@ bool phyto_string_append_fill(phyto_string_t* string, size_t count, char fill);
 phyto_string_view_t phyto_string_view(phyto_string_t string);
 
 void phyto_string_append_view(phyto_string_t* string, phyto_string_view_t view);
+void phyto_string_append_c(phyto_string_t* string, const char* cstr);
 
 phyto_string_t phyto_string_capitalize(phyto_string_view_t view);
 phyto_string_t phyto_string_center(phyto_string_view_t view, size_t width, char fill);

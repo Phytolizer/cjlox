@@ -67,6 +67,11 @@ function(declare_module NAME)
             ${DM_TARGET_NAME} PROPERTIES OUTPUT_NAME ${DM_OUTPUT_NAME}
         )
     endif()
+    if(WIN32)
+        target_compile_definitions(
+            ${DM_TARGET_NAME} ${DM_PUBLICITY} _CRT_SECURE_NO_WARNINGS
+        )
+    endif()
 endfunction()
 
 declare_module(sysexits KIND interface)
@@ -120,6 +125,13 @@ declare_module(
             own.c
             starts_with.c
     DEPENDS phyto_string phyto_test
+)
+
+declare_module(
+    phyto_io
+    KIND library
+    SOURCES io.c
+    DEPENDS phyto_string phyto_string_view
 )
 
 declare_module(

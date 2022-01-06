@@ -45,6 +45,10 @@ void phyto_string_append_view(phyto_string_t* string, phyto_string_view_t view) 
     PHYTO_VEC_PUSH_ARRAY(string, view.begin, view.size);
 }
 
+void phyto_string_append_c(phyto_string_t* string, const char* cstr) {
+    phyto_string_append_view(string, phyto_string_view_from_c(cstr));
+}
+
 phyto_string_t phyto_string_capitalize(phyto_string_view_t view) {
     phyto_string_t result = phyto_string_new();
     phyto_string_reserve(&result, view.size);
