@@ -1,6 +1,0 @@
-* expr (object.h, token.h)
-V ast_printer = char *.
-binary   : struct expr *left, struct token operator, struct expr *right.
-grouping : struct expr *expression.
-literal  : struct object value.
-unary    : struct token operator, struct expr *right.
