@@ -9,6 +9,9 @@
 typedef PHYTO_VEC_TYPE(char) phyto_string_t;
 typedef PHYTO_VEC_TYPE(phyto_string_t) phyto_string_vec_t;
 
+#define PHYTO_STRING_FORMAT ".*s"
+#define PHYTO_STRING_PRINTF_ARGS(Str) (int)(Str).size, (Str).data
+
 phyto_string_t phyto_string_new(void);
 phyto_string_t phyto_string_own(phyto_string_view_t view);
 phyto_string_t phyto_string_from_c(const char* str);

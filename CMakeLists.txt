@@ -106,6 +106,12 @@ declare_module(
     SOURCES string.c
     DEPENDS phyto_string_view phyto_vec nonstd
 )
+declare_module(
+    phyto_string_test
+    KIND executable
+    SOURCES append_fill.c main.c own.c
+    DEPENDS phyto_string phyto_test
+)
 
 declare_module(
     lox
