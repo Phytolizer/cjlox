@@ -125,7 +125,14 @@ bool phyto_string_starts_with(phyto_string_view_t view, phyto_string_view_t sub)
 }
 
 phyto_string_t phyto_string_expand_tabs(phyto_string_view_t view, size_t tab_width) {
+    if (tab_width == 0) {
+        return phyto_string_replace(view, phyto_string_view_from_c("\t"),
+                                    phyto_string_view_empty());
+    }
     phyto_string_t result = phyto_string_new();
+    // if no tabs, it will be the same length
+    // if there are tabs, it will be longer but the vec will just resize
+    phyto_string_reserve(&result, view.size);
     for (size_t i = 0; i < view.size; ++i) {
         char c = view.begin[i];
         if (c == '\t') {

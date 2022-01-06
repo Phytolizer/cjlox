@@ -115,6 +115,7 @@ declare_module(
             center.c
             count.c
             ends_with.c
+            expand_tabs.c
             main.c
             own.c
             starts_with.c
