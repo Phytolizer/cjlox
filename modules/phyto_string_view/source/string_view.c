@@ -18,6 +18,20 @@ phyto_string_view_t phyto_string_view_empty(void) {
     return (phyto_string_view_t){0};
 }
 
+phyto_string_view_t phyto_string_view_substr(phyto_string_view_t view, size_t begin, size_t end) {
+    if (end > view.size) {
+        end = view.size;
+    }
+    if (begin > end) {
+        begin = end;
+    }
+    return (phyto_string_view_t)PHYTO_SPAN_NEW(view.begin + begin, view.begin + end);
+}
+
 bool phyto_string_view_is_empty(phyto_string_view_t view) {
     return view.size == 0;
+}
+
+bool phyto_string_view_equal(phyto_string_view_t view, phyto_string_view_t other) {
+    return view.size == other.size && memcmp(view.begin, other.begin, view.size) == 0;
 }
