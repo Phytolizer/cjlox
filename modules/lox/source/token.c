@@ -34,7 +34,9 @@ phyto_string_t lox_token_to_string(lox_token_t token) {
 }
 
 void lox_token_print(lox_token_t token) {
-    phyto_string_t str = lox_token_to_string(token);
-    printf("%" PHYTO_STRING_FORMAT, PHYTO_STRING_PRINTF_ARGS(str));
-    phyto_string_free(&str);
+    phyto_string_t literal = lox_object_to_string(token.literal);
+    printf("%" PHYTO_STRING_FORMAT " %" PHYTO_STRING_FORMAT " %" PHYTO_STRING_FORMAT,
+           PHYTO_STRING_VIEW_PRINTF_ARGS(lox_token_type_name(token.type)),
+           PHYTO_STRING_PRINTF_ARGS(token.lexeme), PHYTO_STRING_PRINTF_ARGS(literal));
+    phyto_string_free(&literal);
 }
