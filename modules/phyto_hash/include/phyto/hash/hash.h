@@ -34,9 +34,9 @@ extern const double phyto_hash_default_load;
 
 #define PHYTO_HASH_DECL(Name, V)                                                               \
     typedef enum {                                                                             \
-        Name##_entry_state_deleted,                                                            \
         Name##_entry_state_empty,                                                              \
         Name##_entry_state_filled,                                                             \
+        Name##_entry_state_deleted,                                                            \
     } Name##_entry_state_t;                                                                    \
     typedef struct {                                                                           \
         phyto_string_t key;                                                                    \
