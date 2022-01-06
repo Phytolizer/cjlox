@@ -386,10 +386,31 @@ PHYTO_TEST_SUITE_FUNC(iteration) {
     PHYTO_TEST_RUN(go_to);
 }
 
+PHYTO_TEST_FUNC(to_string) {
+    int_map_t* map = int_map_new(10, phyto_hash_default_load, &default_key_ops, &default_value_ops);
+    PHYTO_TEST_ASSERT(map != NULL, (void)0, "int_map_new() failed");
+    PHYTO_TEST_RUN_SUBTEST(insert_alphabet, int_map_free(map), map);
+
+    int_map_to_string(map, stdout);
+    printf("\n");
+    int_map_print(map, stdout, phyto_string_view_from_c("==int_map_print==\n"),
+                  phyto_string_view_from_c("\n"),
+                  phyto_string_view_from_c("\n==end int_map_print=="),
+                  phyto_string_view_from_c(":"));
+    printf("\n");
+    int_map_free(map);
+    PHYTO_TEST_PASS();
+}
+
+PHYTO_TEST_SUITE_FUNC(string) {
+    PHYTO_TEST_RUN(to_string);
+}
+
 int main(void) {
     phyto_test_state_t state = {0};
     PHYTO_TEST_RUN_SUITE(basics, &state);
     PHYTO_TEST_RUN_SUITE(iteration, &state);
+    PHYTO_TEST_RUN_SUITE(string, &state);
     printf(ANSI_ESC_FG_YELLOW "%" PRIu64 ANSI_ESC_RESET " tests, " ANSI_ESC_FG_GREEN
                               "%" PRIu64 ANSI_ESC_RESET " passes, " ANSI_ESC_FG_RED
                               "%" PRIu64 ANSI_ESC_RESET " failures, " ANSI_ESC_FG_BLUE

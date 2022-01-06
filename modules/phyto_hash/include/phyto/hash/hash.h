@@ -700,7 +700,7 @@ extern const double phyto_hash_default_load;
                 if (!map->value_ops->print(fp, entry->value)) {                                \
                     return false;                                                              \
                 }                                                                              \
-                if (i + 1 < last) {                                                            \
+                if (i < last) {                                                                \
                     fprintf(fp, "%" PHYTO_STRING_FORMAT,                                       \
                             PHYTO_STRING_VIEW_PRINTF_ARGS(separator));                         \
                 }                                                                              \
