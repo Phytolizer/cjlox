@@ -3,7 +3,7 @@
 #include <phyto/string/string.h>
 #include <phyto/string_view/string_view.h>
 
-PHYTO_TEST_FUNC(string_center_empty) {
+static PHYTO_TEST_FUNC(empty) {
     phyto_string_view_t str = phyto_string_view_empty();
     phyto_string_t centered = phyto_string_center(str, 10, ' ');
     PHYTO_TEST_ASSERT(phyto_string_view_equal(phyto_string_view(centered),
@@ -15,7 +15,7 @@ PHYTO_TEST_FUNC(string_center_empty) {
     PHYTO_TEST_PASS();
 }
 
-PHYTO_TEST_FUNC(string_center_identity) {
+static PHYTO_TEST_FUNC(identity) {
     phyto_string_view_t str = phyto_string_view_from_c("Hello, world!");
     phyto_string_t centered = phyto_string_center(str, 10, ' ');
     PHYTO_TEST_ASSERT(
@@ -26,7 +26,7 @@ PHYTO_TEST_FUNC(string_center_identity) {
     PHYTO_TEST_PASS();
 }
 
-PHYTO_TEST_FUNC(string_center_even) {
+static PHYTO_TEST_FUNC(even) {
     phyto_string_view_t str = phyto_string_view_from_c("Hello, world!");
     phyto_string_t centered = phyto_string_center(str, 14, ' ');
     PHYTO_TEST_ASSERT(
@@ -39,7 +39,7 @@ PHYTO_TEST_FUNC(string_center_even) {
     PHYTO_TEST_PASS();
 }
 
-PHYTO_TEST_FUNC(string_center_long) {
+static PHYTO_TEST_FUNC(longer) {
     phyto_string_view_t str = phyto_string_view_from_c("Hello, world!");
     phyto_string_t centered = phyto_string_center(str, 40, '=');
     PHYTO_TEST_ASSERT(
@@ -53,9 +53,9 @@ PHYTO_TEST_FUNC(string_center_long) {
     PHYTO_TEST_PASS();
 }
 
-PHYTO_TEST_SUITE_FUNC(string_center) {
-    PHYTO_TEST_RUN(string_center_empty);
-    PHYTO_TEST_RUN(string_center_identity);
-    PHYTO_TEST_RUN(string_center_even);
-    PHYTO_TEST_RUN(string_center_long);
+PHYTO_TEST_SUITE_FUNC(center) {
+    PHYTO_TEST_RUN(empty);
+    PHYTO_TEST_RUN(identity);
+    PHYTO_TEST_RUN(even);
+    PHYTO_TEST_RUN(longer);
 }

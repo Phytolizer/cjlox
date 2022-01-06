@@ -2,7 +2,7 @@
 
 #include "phyto/string/string.h"
 
-PHYTO_TEST_FUNC(string_capitalize_empty) {
+static PHYTO_TEST_FUNC(empty) {
     phyto_string_t str = phyto_string_new();
     phyto_string_t caps = phyto_string_capitalize(phyto_string_view(str));
     PHYTO_TEST_ASSERT(
@@ -18,7 +18,7 @@ PHYTO_TEST_FUNC(string_capitalize_empty) {
     PHYTO_TEST_PASS();
 }
 
-PHYTO_TEST_FUNC(string_capitalize_allcaps) {
+static PHYTO_TEST_FUNC(allcaps) {
     phyto_string_t str = phyto_string_from_c("HELLO WORLD");
     phyto_string_t caps = phyto_string_capitalize(phyto_string_view(str));
     phyto_string_view_t expected = phyto_string_view_from_c("Hello world");
@@ -35,7 +35,7 @@ PHYTO_TEST_FUNC(string_capitalize_allcaps) {
     PHYTO_TEST_PASS();
 }
 
-PHYTO_TEST_FUNC(string_capitalize_alllower) {
+static PHYTO_TEST_FUNC(alllower) {
     phyto_string_t str = phyto_string_from_c("hello world");
     phyto_string_t caps = phyto_string_capitalize(phyto_string_view(str));
     phyto_string_view_t expected = phyto_string_view_from_c("Hello world");
@@ -52,7 +52,7 @@ PHYTO_TEST_FUNC(string_capitalize_alllower) {
     PHYTO_TEST_PASS();
 }
 
-PHYTO_TEST_FUNC(string_capitalize_mixed) {
+static PHYTO_TEST_FUNC(mixed) {
     phyto_string_t str = phyto_string_from_c("hElLo wOrLd");
     phyto_string_t caps = phyto_string_capitalize(phyto_string_view(str));
     phyto_string_view_t expected = phyto_string_view_from_c("Hello world");
@@ -69,7 +69,7 @@ PHYTO_TEST_FUNC(string_capitalize_mixed) {
     PHYTO_TEST_PASS();
 }
 
-PHYTO_TEST_FUNC(string_capitalize_nochange) {
+static PHYTO_TEST_FUNC(nochange) {
     phyto_string_t str = phyto_string_from_c("Hello world");
     phyto_string_t caps = phyto_string_capitalize(phyto_string_view(str));
     phyto_string_view_t expected = phyto_string_view_from_c("Hello world");
@@ -86,10 +86,10 @@ PHYTO_TEST_FUNC(string_capitalize_nochange) {
     PHYTO_TEST_PASS();
 }
 
-PHYTO_TEST_SUITE_FUNC(string_capitalize) {
-    PHYTO_TEST_RUN(string_capitalize_empty);
-    PHYTO_TEST_RUN(string_capitalize_allcaps);
-    PHYTO_TEST_RUN(string_capitalize_alllower);
-    PHYTO_TEST_RUN(string_capitalize_mixed);
-    PHYTO_TEST_RUN(string_capitalize_nochange);
+PHYTO_TEST_SUITE_FUNC(capitalize) {
+    PHYTO_TEST_RUN(empty);
+    PHYTO_TEST_RUN(allcaps);
+    PHYTO_TEST_RUN(alllower);
+    PHYTO_TEST_RUN(mixed);
+    PHYTO_TEST_RUN(nochange);
 }

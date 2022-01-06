@@ -118,6 +118,9 @@ bool phyto_string_starts_with(phyto_string_view_t view, phyto_string_view_t sub)
     if (view.size < sub.size) {
         return false;
     }
+    if (sub.size == 0) {
+        return false;
+    }
     return memcmp(view.begin, sub.begin, sub.size) == 0;
 }
 

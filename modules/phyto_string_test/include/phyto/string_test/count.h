@@ -3,6 +3,6 @@
 
 #include <phyto/test/test.h>
 
-PHYTO_TEST_SUITE_FUNC(string_count);
+PHYTO_TEST_SUITE_FUNC(count);
 
 #endif  // PHYTO_STRING_TEST_COUNT_H_

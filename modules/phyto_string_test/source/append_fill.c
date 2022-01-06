@@ -3,7 +3,7 @@
 #include <phyto/string/string.h>
 #include <phyto/test/test.h>
 
-PHYTO_TEST_FUNC(string_append_fill_zero) {
+static PHYTO_TEST_FUNC(zero) {
     phyto_string_t str = phyto_string_own(phyto_string_view_from_c("Hello, world!"));
     phyto_string_append_fill(&str, 0, '!');
     phyto_string_view_t view = phyto_string_view_from_c("Hello, world!");
@@ -15,7 +15,7 @@ PHYTO_TEST_FUNC(string_append_fill_zero) {
     PHYTO_TEST_PASS();
 }
 
-PHYTO_TEST_FUNC(string_append_fill_basic) {
+static PHYTO_TEST_FUNC(basic) {
     phyto_string_t str = phyto_string_new();
     phyto_string_append_fill(&str, 5, '!');
     phyto_string_view_t view = phyto_string_view_from_c("!!!!!");
@@ -27,7 +27,7 @@ PHYTO_TEST_FUNC(string_append_fill_basic) {
     PHYTO_TEST_PASS();
 }
 
-PHYTO_TEST_FUNC(string_append_fill_twice) {
+static PHYTO_TEST_FUNC(twice) {
     phyto_string_t str = phyto_string_new();
     phyto_string_append_fill(&str, 5, '!');
     phyto_string_append_fill(&str, 5, '!');
@@ -41,8 +41,8 @@ PHYTO_TEST_FUNC(string_append_fill_twice) {
     PHYTO_TEST_PASS();
 }
 
-PHYTO_TEST_SUITE_FUNC(string_append_fill) {
-    PHYTO_TEST_RUN(string_append_fill_zero);
-    PHYTO_TEST_RUN(string_append_fill_basic);
-    PHYTO_TEST_RUN(string_append_fill_twice);
+PHYTO_TEST_SUITE_FUNC(append_fill) {
+    PHYTO_TEST_RUN(zero);
+    PHYTO_TEST_RUN(basic);
+    PHYTO_TEST_RUN(twice);
 }

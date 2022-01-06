@@ -3,6 +3,6 @@
 
 #include <phyto/test/test.h>
 
-PHYTO_TEST_SUITE_FUNC(string_append_fill);
+PHYTO_TEST_SUITE_FUNC(append_fill);
 
 #endif  // PHYTO_STRING_TEST_APPEND_FILL_H_

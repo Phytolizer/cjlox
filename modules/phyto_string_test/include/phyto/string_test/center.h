@@ -3,6 +3,6 @@
 
 #include <phyto/test/test.h>
 
-PHYTO_TEST_SUITE_FUNC(string_center);
+PHYTO_TEST_SUITE_FUNC(center);
 
 #endif  // PHYTO_STRING_TEST_CENTER_H_

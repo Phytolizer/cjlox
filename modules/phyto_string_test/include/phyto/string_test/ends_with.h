@@ -3,6 +3,6 @@
 
 #include <phyto/test/test.h>
 
-PHYTO_TEST_SUITE_FUNC(string_ends_with);
+PHYTO_TEST_SUITE_FUNC(ends_with);
 
 #endif  // PHYTO_STRING_TEST_ENDS_WITH_H_

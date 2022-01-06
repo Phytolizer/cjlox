@@ -12,13 +12,13 @@
 #include "phyto/string_test/own.h"
 
 void all_tests(phyto_test_state_t* state) {
-    PHYTO_TEST_RUN_SUITE(string_own, state);
-    PHYTO_TEST_RUN_SUITE(string_append_fill, state);
-    PHYTO_TEST_RUN_SUITE(string_append_view, state);
-    PHYTO_TEST_RUN_SUITE(string_capitalize, state);
-    PHYTO_TEST_RUN_SUITE(string_center, state);
-    PHYTO_TEST_RUN_SUITE(string_count, state);
-    PHYTO_TEST_RUN_SUITE(string_ends_with, state);
+    PHYTO_TEST_RUN_SUITE(append_fill, state);
+    PHYTO_TEST_RUN_SUITE(append_view, state);
+    PHYTO_TEST_RUN_SUITE(capitalize, state);
+    PHYTO_TEST_RUN_SUITE(center, state);
+    PHYTO_TEST_RUN_SUITE(count, state);
+    PHYTO_TEST_RUN_SUITE(ends_with, state);
+    PHYTO_TEST_RUN_SUITE(own, state);
 }
 
 int main(void) {
