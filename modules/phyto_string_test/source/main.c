@@ -21,6 +21,7 @@ void all_tests(phyto_test_state_t* state) {
     PHYTO_TEST_RUN_SUITE(count, state);
     PHYTO_TEST_RUN_SUITE(ends_with, state);
     PHYTO_TEST_RUN_SUITE(expand_tabs, state);
+    // TODO more tests
     PHYTO_TEST_RUN_SUITE(own, state);
     PHYTO_TEST_RUN_SUITE(starts_with, state);
 }
