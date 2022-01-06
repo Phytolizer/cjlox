@@ -20,23 +20,6 @@ static PHYTO_TEST_SUBTEST_FUNC(assert_error, int_map_t* map, phyto_hash_flag_t e
     PHYTO_TEST_SUBTEST_PASS();
 }
 
-static uint64_t sview_fnv1a(phyto_string_view_t s) {
-    uint64_t hash = 0xcbf29ce484222325;
-    for (size_t i = 0; i < s.size; i++) {
-        hash ^= (uint8_t)s.begin[i];
-        hash *= 0x100000001b3;
-    }
-    return hash;
-}
-
-static uint64_t sview_djb2(phyto_string_view_t s) {
-    uint64_t hash = 5381;
-    for (size_t i = 0; i < s.size; i++) {
-        hash = ((hash << 5) + hash) + (uint8_t)s.begin[i];
-    }
-    return hash;
-}
-
 static int32_t intcmp(int a, int b) {
     return a - b;
 }
@@ -50,7 +33,7 @@ static void intfree(int a) {
 }
 
 static uint64_t int_fnv1a(int a) {
-    return sview_fnv1a(phyto_string_view_from_ptr_length((char*)&a, sizeof(a)));
+    return phyto_hash_fnv1a(phyto_string_view_from_ptr_length((char*)&a, sizeof(a)));
 }
 
 static bool intprint(FILE* fp, int a) {
@@ -59,11 +42,11 @@ static bool intprint(FILE* fp, int a) {
 }
 
 static const int_map_key_ops_t default_key_ops = {
-    .hash = sview_fnv1a,
+    .hash = phyto_hash_fnv1a,
 };
 
 static const int_map_key_ops_t djb2_key_ops = {
-    .hash = sview_djb2,
+    .hash = phyto_hash_djb2,
 };
 
 static const int_map_value_ops_t default_value_ops = {

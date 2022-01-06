@@ -1,5 +1,23 @@
 #include "phyto/hash/hash.h"
 
+uint64_t phyto_hash_fnv1a(phyto_string_view_t s) {
+    uint64_t hash = 0xcbf29ce484222325;
+    for (size_t i = 0; i < s.size; i++) {
+        hash ^= (uint8_t)s.begin[i];
+        hash *= 0x100000001b3;
+    }
+    return hash;
+}
+
+uint64_t phyto_hash_djb2(phyto_string_view_t s) {
+    uint64_t hash = 5381;
+    for (size_t i = 0; i < s.size; i++) {
+        hash = ((hash << 5) + hash) + (uint8_t)s.begin[i];
+    }
+    return hash;
+}
+
+
 const double phyto_hash_default_load = 0.75;
 
 static const char* const hash_flag_descriptions[] = {

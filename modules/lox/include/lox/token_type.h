@@ -2,6 +2,8 @@
 #define LOX_TOKEN_TYPE_H_
 
 #include <phyto/string_view/string_view.h>
+#include <stdint.h>
+#include <stdio.h>
 
 #define LOX_TOKEN_TYPES_X \
     X(LEFT_PAREN)         \
@@ -55,6 +57,8 @@ typedef enum {
 } lox_token_type_t;
 
 phyto_string_view_t lox_token_type_name(lox_token_type_t type);
+bool lox_token_type_print_to(FILE* fp, lox_token_type_t type);
+int32_t lox_token_type_cmp(lox_token_type_t a, lox_token_type_t b);
 
 extern const lox_token_type_t lox_token_types[];
 

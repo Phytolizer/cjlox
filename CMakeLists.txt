@@ -152,7 +152,7 @@ declare_module(
     lox
     KIND library
     SOURCES lox.c object.c scanner.c token_type.c token.c
-    DEPENDS sysexits phyto_io phyto_string
+    DEPENDS sysexits phyto_io phyto_string phyto_hash
 )
 declare_module(
     cjlox

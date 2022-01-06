@@ -30,6 +30,8 @@ typedef PHYTO_SPAN_TYPE(uint64_t) phyto_hash_prime_span_t;
 
 phyto_hash_prime_span_t phyto_hash_prime_span(void);
 
+uint64_t phyto_hash_fnv1a(phyto_string_view_t s);
+uint64_t phyto_hash_djb2(phyto_string_view_t s);
 extern const double phyto_hash_default_load;
 
 #define PHYTO_HASH_DECL(Name, V)                                                               \
