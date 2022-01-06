@@ -278,8 +278,9 @@ phyto_string_t phyto_string_join(size_t count, phyto_string_view_t sep, ...) {
     return result;
 }
 
+// NOLINTNEXTLINE(readability-non-const-parameter)
 phyto_string_t phyto_string_join_va(size_t count, phyto_string_view_t sep, va_list args) {
-    phyto_string_t result = {};
+    phyto_string_t result = phyto_string_new();
     for (size_t i = 0; i < count; ++i) {
         phyto_string_view_t view = va_arg(args, phyto_string_view_t);
         phyto_string_append_view(&result, view);
