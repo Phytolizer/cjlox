@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [reset]
+    branches: [master]
   pull_request:
-    branches: [reset]
+    branches: [master]
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
