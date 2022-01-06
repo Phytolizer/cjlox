@@ -108,6 +108,9 @@ bool phyto_string_ends_with(phyto_string_view_t view, phyto_string_view_t sub) {
     if (view.size < sub.size) {
         return false;
     }
+    if (sub.size == 0) {
+        return false;
+    }
     return memcmp(view.begin + view.size - sub.size, sub.begin, sub.size) == 0;
 }
 

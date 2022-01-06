@@ -114,6 +114,7 @@ declare_module(
             capitalize.c
             center.c
             count.c
+            ends_with.c
             main.c
             own.c
     DEPENDS phyto_string phyto_test
