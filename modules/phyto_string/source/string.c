@@ -47,6 +47,7 @@ void phyto_string_append_view(phyto_string_t* string, phyto_string_view_t view) 
 
 phyto_string_t phyto_string_capitalize(phyto_string_view_t view) {
     phyto_string_t result = phyto_string_new();
+    phyto_string_reserve(&result, view.size);
     for (size_t i = 0; i < view.size; ++i) {
         char c = view.begin[i];
         if (i == 0) {
