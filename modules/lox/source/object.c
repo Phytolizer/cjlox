@@ -85,6 +85,7 @@ phyto_string_t lox_object_to_string(lox_object_t obj) {
     case LOX_OBJECT_TYPE_##x: \
         return stringify_##y##_object(obj);
         LOX_OBJECT_TYPES_XY
+#undef X
     }
 
     assert(false && "corrupt object type");
