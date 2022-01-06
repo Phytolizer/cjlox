@@ -166,7 +166,7 @@ add_custom_target(
 declare_module(
     lox
     KIND library
-    SOURCES lox.c object.c scanner.c token_type.c token.c
+    SOURCES ast_printer.c lox.c object.c scanner.c token_type.c token.c
     DEPENDS sysexits phyto_io phyto_string phyto_hash
     INCLUDES "${PROJECT_BINARY_DIR}/build_include"
 )

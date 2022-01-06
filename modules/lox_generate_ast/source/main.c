@@ -339,7 +339,9 @@ static void parse_def(parser_t* p, FILE* output) {
     }
     fprintf(output, "#define " NS_UPPER "_%" SV_FMT "_VISITOR_DECL(Name, T) \\\n",
             STR_PRN(tree_name_upper));
-    fprintf(output, "    T " NS "_%" SV_FMT "_accept_##Name(" NS "_%" SV_FMT "_t* node); \\\n",
+    fprintf(output,
+            "    T " NS "_%" SV_FMT "_accept_##Name(" NS "_%" SV_FMT
+            "_t* node, Name##_t* visitor); \\\n",
             SV_PRN(tree_name), SV_PRN(tree_name));
     for (size_t i = 0; i < nodes.size; ++i) {
         fprintf(output,
@@ -359,7 +361,9 @@ static void parse_def(parser_t* p, FILE* output) {
     fprintf(output, "#define " NS_UPPER "_%" SV_FMT "_VISITOR_IMPL(Name, T) \\\n",
             STR_PRN(tree_name_upper));
     phyto_string_free(&tree_name_upper);
-    fprintf(output, "    T " NS "_%" SV_FMT "_accept_##Name(" NS "_%" SV_FMT "_t* node) { \\\n",
+    fprintf(output,
+            "    T " NS "_%" SV_FMT "_accept_##Name(" NS "_%" SV_FMT
+            "_t* node, Name##_t* visitor) { \\\n",
             SV_PRN(tree_name), SV_PRN(tree_name));
     fprintf(output, "        switch (node->type) { \\\n");
     for (size_t i = 0; i < nodes.size; ++i) {
