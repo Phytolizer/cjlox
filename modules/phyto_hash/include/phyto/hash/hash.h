@@ -59,8 +59,8 @@ extern const double phyto_hash_default_load;
         size_t count;                                                                          \
         double load;                                                                           \
         phyto_hash_flag_t flag;                                                                \
-        const Name##_key_ops_t* key_ops;                                                             \
-        const Name##_value_ops_t* value_ops;                                                         \
+        const Name##_key_ops_t* key_ops;                                                       \
+        const Name##_value_ops_t* value_ops;                                                   \
     } Name##_t;                                                                                \
     Name##_t* Name##_new(size_t capacity, double load, const Name##_key_ops_t* key_ops,        \
                          const Name##_value_ops_t* value_ops);                                 \
@@ -440,6 +440,274 @@ extern const double phyto_hash_default_load;
             i++;                                                                                \
         }                                                                                       \
         return prime_span.begin[i];                                                             \
+    }
+
+#define PHYTO_HASH_DECL_ITER(Name, V)                            \
+    typedef struct {                                             \
+        Name##_t* target;                                        \
+        size_t cursor;                                           \
+        size_t index;                                            \
+        size_t first;                                            \
+        size_t last;                                             \
+        bool at_start;                                           \
+        bool at_end;                                             \
+    } Name##_iter_t;                                             \
+    Name##_iter_t Name##_iter_start(Name##_t* target);           \
+    Name##_iter_t Name##_iter_end(Name##_t* target);             \
+    bool Name##_iter_at_start(Name##_iter_t* iter);              \
+    bool Name##_iter_at_end(Name##_iter_t* iter);                \
+    bool Name##_iter_to_start(Name##_iter_t* iter);              \
+    bool Name##_iter_to_end(Name##_iter_t* iter);                \
+    bool Name##_iter_next(Name##_iter_t* iter);                  \
+    bool Name##_iter_prev(Name##_iter_t* iter);                  \
+    bool Name##_iter_advance(Name##_iter_t* iter, size_t steps); \
+    bool Name##_iter_rewind(Name##_iter_t* iter, size_t steps);  \
+    bool Name##_iter_go_to(Name##_iter_t* iter, size_t index);   \
+    phyto_string_view_t Name##_iter_key(Name##_iter_t* iter);    \
+    V Name##_iter_value(Name##_iter_t* iter);                    \
+    V* Name##_iter_value_ref(Name##_iter_t* iter);               \
+    size_t Name##_iter_index(Name##_iter_t* iter)
+
+#define PHYTO_HASH_IMPL_ITER(Name, V)                                           \
+    Name##_iter_t Name##_iter_start(Name##_t* target) {                         \
+        Name##_iter_t iter = {                                                  \
+            .target = target,                                                   \
+            .cursor = 0,                                                        \
+            .index = 0,                                                         \
+            .first = 0,                                                         \
+            .last = 0,                                                          \
+            .at_start = true,                                                   \
+            .at_end = Name##_empty(target),                                     \
+        };                                                                      \
+        if (!Name##_empty(target)) {                                            \
+            for (size_t i = 0; i < target->capacity; ++i) {                     \
+                if (target->buffer[i].state == Name##_entry_state_filled) {     \
+                    iter.first = i;                                             \
+                    break;                                                      \
+                }                                                               \
+            }                                                                   \
+            iter.cursor = iter.first;                                           \
+            for (size_t i = target->capacity; i > 0; --i) {                     \
+                if (target->buffer[i - 1].state == Name##_entry_state_filled) { \
+                    iter.last = i - 1;                                          \
+                    break;                                                      \
+                }                                                               \
+            }                                                                   \
+        }                                                                       \
+        return iter;                                                            \
+    }                                                                           \
+    Name##_iter_t Name##_iter_end(Name##_t* target) {                           \
+        Name##_iter_t iter = {                                                  \
+            .target = target,                                                   \
+            .cursor = 0,                                                        \
+            .index = 0,                                                         \
+            .first = 0,                                                         \
+            .last = 0,                                                          \
+            .at_start = Name##_empty(target),                                   \
+            .at_end = true,                                                     \
+        };                                                                      \
+        if (!Name##_empty(target)) {                                            \
+            for (size_t i = 0; i < target->capacity; ++i) {                     \
+                if (target->buffer[i].state == Name##_entry_state_filled) {     \
+                    iter.first = i;                                             \
+                    break;                                                      \
+                }                                                               \
+            }                                                                   \
+            for (size_t i = target->capacity; i > 0; --i) {                     \
+                if (target->buffer[i - 1].state == Name##_entry_state_filled) { \
+                    iter.last = i - 1;                                          \
+                    break;                                                      \
+                }                                                               \
+            }                                                                   \
+            iter.cursor = iter.last;                                            \
+            iter.index = target->count - 1;                                     \
+        }                                                                       \
+        return iter;                                                            \
+    }                                                                           \
+    bool Name##_iter_at_start(Name##_iter_t* iter) {                            \
+        return Name##_empty(iter->target) || iter->at_start;                    \
+    }                                                                           \
+    bool Name##_iter_at_end(Name##_iter_t* iter) {                              \
+        return Name##_empty(iter->target) || iter->at_end;                      \
+    }                                                                           \
+    bool Name##_iter_to_start(Name##_iter_t* iter) {                            \
+        if (!Name##_empty(iter->target)) {                                      \
+            iter->cursor = iter->first;                                         \
+            iter->index = 0;                                                    \
+            iter->at_start = true;                                              \
+            iter->at_end = false;                                               \
+            return true;                                                        \
+        }                                                                       \
+        return false;                                                           \
+    }                                                                           \
+    bool Name##_iter_to_end(Name##_iter_t* iter) {                              \
+        if (!Name##_empty(iter->target)) {                                      \
+            iter->cursor = iter->last;                                          \
+            iter->index = iter->target->count - 1;                              \
+            iter->at_start = false;                                             \
+            iter->at_end = true;                                                \
+            return true;                                                        \
+        }                                                                       \
+        return false;                                                           \
+    }                                                                           \
+    bool Name##_iter_next(Name##_iter_t* iter) {                                \
+        if (iter->at_end) {                                                     \
+            return false;                                                       \
+        }                                                                       \
+        if (iter->index + 1 == iter->target->count) {                           \
+            iter->at_end = true;                                                \
+            return false;                                                       \
+        }                                                                       \
+        iter->at_start = Name##_empty(iter->target);                            \
+        Name##_entry_t* scan = &iter->target->buffer[iter->cursor];             \
+        iter->index++;                                                          \
+        while (true) {                                                          \
+            iter->cursor++;                                                     \
+            scan = &iter->target->buffer[iter->cursor];                         \
+            if (scan->state == Name##_entry_state_filled) {                     \
+                break;                                                          \
+            }                                                                   \
+        }                                                                       \
+        return true;                                                            \
+    }                                                                           \
+    bool Name##_iter_prev(Name##_iter_t* iter) {                                \
+        if (iter->at_start) {                                                   \
+            return false;                                                       \
+        }                                                                       \
+        if (iter->index == 0) {                                                 \
+            iter->at_start = true;                                              \
+            return false;                                                       \
+        }                                                                       \
+        iter->at_end = Name##_empty(iter->target);                              \
+        Name##_entry_t* scan = &iter->target->buffer[iter->cursor];             \
+        iter->index--;                                                          \
+        while (true) {                                                          \
+            iter->cursor--;                                                     \
+            scan = &iter->target->buffer[iter->cursor];                         \
+            if (scan->state == Name##_entry_state_filled) {                     \
+                break;                                                          \
+            }                                                                   \
+        }                                                                       \
+        return true;                                                            \
+    }                                                                           \
+    bool Name##_iter_advance(Name##_iter_t* iter, size_t steps) {               \
+        if (iter->at_end) {                                                     \
+            return false;                                                       \
+        }                                                                       \
+        if (iter->index + 1 == iter->target->count) {                           \
+            iter->at_end = true;                                                \
+            return false;                                                       \
+        }                                                                       \
+        if (steps == 0 || iter->index + steps >= iter->target->count) {         \
+            return false;                                                       \
+        }                                                                       \
+        for (size_t i = 0; i < steps; ++i) {                                    \
+            Name##_iter_next(iter);                                             \
+        }                                                                       \
+        return true;                                                            \
+    }                                                                           \
+    bool Name##_iter_rewind(Name##_iter_t* iter, size_t steps) {                \
+        if (iter->at_start) {                                                   \
+            return false;                                                       \
+        }                                                                       \
+        if (iter->index == 0) {                                                 \
+            iter->at_start = true;                                              \
+            return false;                                                       \
+        }                                                                       \
+        if (steps == 0 || iter->index < steps) {                                \
+            return false;                                                       \
+        }                                                                       \
+        for (size_t i = 0; i < steps; ++i) {                                    \
+            Name##_iter_prev(iter);                                             \
+        }                                                                       \
+        return true;                                                            \
+    }                                                                           \
+    bool Name##_iter_go_to(Name##_iter_t* iter, size_t index) {                 \
+        if (index >= iter->target->count) {                                     \
+            return false;                                                       \
+        }                                                                       \
+        if (iter->index > index) {                                              \
+            return Name##_iter_rewind(iter, iter->index - index);               \
+        }                                                                       \
+        if (iter->index < index) {                                              \
+            return Name##_iter_advance(iter, index - iter->index);              \
+        }                                                                       \
+        return true;                                                            \
+    }                                                                           \
+    phyto_string_view_t Name##_iter_key(Name##_iter_t* iter) {                  \
+        if (Name##_empty(iter->target)) {                                       \
+            return phyto_string_view_empty();                                   \
+        }                                                                       \
+        return phyto_string_view(iter->target->buffer[iter->cursor].key);       \
+    }                                                                           \
+    V Name##_iter_value(Name##_iter_t* iter) {                                  \
+        if (Name##_empty(iter->target)) {                                       \
+            return (V){0};                                                      \
+        }                                                                       \
+        return iter->target->buffer[iter->cursor].value;                        \
+    }                                                                           \
+    V* Name##_iter_value_ref(Name##_iter_t* iter) {                             \
+        if (Name##_empty(iter->target)) {                                       \
+            return NULL;                                                        \
+        }                                                                       \
+        return &iter->target->buffer[iter->cursor].value;                       \
+    }                                                                           \
+    size_t Name##_iter_index(Name##_iter_t* iter) { return iter->index; }
+
+#define PHYTO_HASH_DECL_STR(Name, V)                                          \
+    bool Name##_to_string(Name##_t* map, FILE* fp);                           \
+    bool Name##_print(Name##_t* map, FILE* fp, phyto_string_view_t start,     \
+                      phyto_string_view_t separator, phyto_string_view_t end, \
+                      phyto_string_view_t key_value_separator)
+
+#define PHYTO_HASH_IMPL_STR(Name, V)                                                           \
+    bool Name##_to_string(Name##_t* map, FILE* fp) {                                           \
+        return 0 <= fprintf(fp,                                                                \
+                            "struct %s<%s, %s> "                                               \
+                            "at %p { "                                                         \
+                            "buffer:%p, "                                                      \
+                            "capacity:%" PRIuMAX                                               \
+                            ", "                                                               \
+                            "count:%" PRIuMAX                                                  \
+                            ", "                                                               \
+                            "load:%lf, "                                                       \
+                            "flag:%" PHYTO_STRING_FORMAT                                       \
+                            ", "                                                               \
+                            "key_ops:%p, "                                                     \
+                            "value_ops:%p }",                                                  \
+                            #Name, "phyto_string_t", #V, map, map->buffer, map->capacity,      \
+                            map->count, map->load,                                             \
+                            PHYTO_STRING_VIEW_PRINTF_ARGS(phyto_hash_flag_explain(map->flag)), \
+                            map->key_ops, map->value_ops);                                     \
+    }                                                                                          \
+    bool Name##_print(Name##_t* map, FILE* fp, phyto_string_view_t start,                      \
+                      phyto_string_view_t separator, phyto_string_view_t end,                  \
+                      phyto_string_view_t key_value_separator) {                               \
+        fprintf(fp, "%" PHYTO_STRING_FORMAT, PHYTO_STRING_VIEW_PRINTF_ARGS(start));            \
+        size_t last = 0;                                                                       \
+        for (size_t i = map->capacity; i > 0; --i) {                                           \
+            if (map->buffer[i - 1].state == Name##_entry_state_filled) {                       \
+                last = i - 1;                                                                  \
+                break;                                                                         \
+            }                                                                                  \
+        }                                                                                      \
+        for (size_t i = 0; i < map->capacity; ++i) {                                           \
+            Name##_entry_t* entry = &map->buffer[i];                                           \
+            if (entry->state == Name##_entry_state_filled) {                                   \
+                phyto_string_view_print_to(phyto_string_view(entry->key), fp);                 \
+                fprintf(fp, "%" PHYTO_STRING_FORMAT,                                           \
+                        PHYTO_STRING_VIEW_PRINTF_ARGS(key_value_separator));                   \
+                if (!map->value_ops->print(fp, entry->value)) {                                \
+                    return false;                                                              \
+                }                                                                              \
+                if (i + 1 < last) {                                                            \
+                    fprintf(fp, "%" PHYTO_STRING_FORMAT,                                       \
+                            PHYTO_STRING_VIEW_PRINTF_ARGS(separator));                         \
+                }                                                                              \
+            }                                                                                  \
+        }                                                                                      \
+        fprintf(fp, "%" PHYTO_STRING_FORMAT, PHYTO_STRING_VIEW_PRINTF_ARGS(end));              \
+        return true;                                                                           \
     }
 
 #endif  // PHYTO_HASH_HASH_H_

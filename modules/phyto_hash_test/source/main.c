@@ -6,6 +6,10 @@
 
 PHYTO_HASH_DECL(int_map, int);
 PHYTO_HASH_IMPL(int_map, int);
+PHYTO_HASH_DECL_ITER(int_map, int);
+PHYTO_HASH_IMPL_ITER(int_map, int);
+PHYTO_HASH_DECL_STR(int_map, int);
+PHYTO_HASH_IMPL_STR(int_map, int);
 
 static PHYTO_TEST_SUBTEST_FUNC(assert_error, int_map_t* map, phyto_hash_flag_t expected) {
     phyto_hash_flag_t actual = int_map_flag(map);
@@ -98,11 +102,26 @@ PHYTO_TEST_FUNC(duplicate_key) {
     PHYTO_TEST_PASS();
 }
 
+PHYTO_TEST_FUNC(not_found) {
+    int_map_t* map = int_map_new(10, phyto_hash_default_load, &default_key_ops, &default_value_ops);
+    PHYTO_TEST_ASSERT(map != NULL, (void)0, "int_map_new() failed");
+    PHYTO_TEST_ASSERT(!int_map_contains(map, phyto_string_view_from_c("hello")), int_map_free(map),
+                      "int_map_contains() succeeded");
+    PHYTO_TEST_ASSERT(int_map_insert(map, phyto_string_view_from_c("hello"), 42), int_map_free(map),
+                      "int_map_insert() failed");
+    PHYTO_TEST_ASSERT(!int_map_update(map, phyto_string_view_from_c("goodbye"), 43, NULL),
+                      int_map_free(map), "int_map_update() succeeded");
+    PHYTO_TEST_RUN_SUBTEST(assert_error, int_map_free(map), map, phyto_hash_flag_not_found);
+    int_map_free(map);
+    PHYTO_TEST_PASS();
+}
+
 PHYTO_TEST_SUITE_FUNC(basics) {
     PHYTO_TEST_RUN(allocation);
     PHYTO_TEST_RUN(insert_once);
     PHYTO_TEST_RUN(insert_reallocate);
     PHYTO_TEST_RUN(duplicate_key);
+    PHYTO_TEST_RUN(not_found);
 }
 
 int main(void) {

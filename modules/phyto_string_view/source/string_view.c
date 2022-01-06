@@ -35,3 +35,7 @@ bool phyto_string_view_is_empty(phyto_string_view_t view) {
 bool phyto_string_view_equal(phyto_string_view_t view, phyto_string_view_t other) {
     return view.size == other.size && memcmp(view.begin, other.begin, view.size) == 0;
 }
+
+void phyto_string_view_print_to(phyto_string_view_t view, FILE* fp) {
+    fwrite(view.begin, 1, view.size, fp);
+}
