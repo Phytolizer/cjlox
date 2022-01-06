@@ -7,7 +7,7 @@ static const char* const token_type_names[] = {
 };
 
 const lox_token_type_t lox_token_types[] = {
-#define X(x) LOX_TOKEN_TYPE_##x,
+#define X(x) lox_token_type_##x,
     LOX_TOKEN_TYPES_X
 #undef X
 };

@@ -6,52 +6,52 @@
 #include <stdio.h>
 
 #define LOX_TOKEN_TYPES_X \
-    X(LEFT_PAREN)         \
-    X(RIGHT_PAREN)        \
-    X(LEFT_BRACE)         \
-    X(RIGHT_BRACE)        \
-    X(COMMA)              \
-    X(DOT)                \
-    X(MINUS)              \
-    X(PLUS)               \
-    X(SEMICOLON)          \
-    X(SLASH)              \
-    X(STAR)               \
+    X(left_paren)         \
+    X(right_paren)        \
+    X(left_brace)         \
+    X(right_brace)        \
+    X(comma)              \
+    X(dot)                \
+    X(minus)              \
+    X(plus)               \
+    X(semicolon)          \
+    X(slash)              \
+    X(star)               \
                           \
-    X(BANG)               \
-    X(BANG_EQUAL)         \
-    X(EQUAL)              \
-    X(EQUAL_EQUAL)        \
-    X(GREATER)            \
-    X(GREATER_EQUAL)      \
-    X(LESS)               \
-    X(LESS_EQUAL)         \
+    X(bang)               \
+    X(bang_equal)         \
+    X(equal)              \
+    X(equal_equal)        \
+    X(greater)            \
+    X(greater_equal)      \
+    X(less)               \
+    X(less_equal)         \
                           \
-    X(IDENTIFIER)         \
-    X(STRING)             \
-    X(NUMBER)             \
+    X(identifier)         \
+    X(string)             \
+    X(number)             \
                           \
-    X(AND)                \
-    X(CLASS)              \
-    X(ELSE)               \
-    X(FALSE)              \
-    X(FOR)                \
-    X(FUN)                \
-    X(IF)                 \
-    X(NIL)                \
-    X(OR)                 \
-    X(PRINT)              \
-    X(RETURN)             \
-    X(SUPER)              \
-    X(THIS)               \
-    X(TRUE)               \
-    X(VAR)                \
-    X(WHILE)              \
+    X(kw_and)             \
+    X(kw_class)           \
+    X(kw_else)            \
+    X(kw_false)           \
+    X(kw_for)             \
+    X(kw_fun)             \
+    X(kw_if)              \
+    X(kw_nil)             \
+    X(kw_or)              \
+    X(kw_print)           \
+    X(kw_return)          \
+    X(kw_super)           \
+    X(kw_this)            \
+    X(kw_true)            \
+    X(kw_var)             \
+    X(kw_while)           \
                           \
-    X(EOF)
+    X(eof)
 
 typedef enum {
-#define X(x) LOX_TOKEN_TYPE_##x,
+#define X(x) lox_token_type_##x,
     LOX_TOKEN_TYPES_X
 #undef X
 } lox_token_type_t;

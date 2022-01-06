@@ -83,7 +83,7 @@ static void string(lox_scanner_t* scanner) {
     advance(scanner);
     phyto_string_t value = phyto_string_own(
         phyto_string_view_substr(scanner->source, scanner->start + 1, scanner->current - 1));
-    add_token_literal(scanner, LOX_TOKEN_TYPE_STRING, lox_object_new_string(value));
+    add_token_literal(scanner, lox_token_type_string, lox_object_new_string(value));
 }
 
 static void number(lox_scanner_t* scanner) {
@@ -99,7 +99,7 @@ static void number(lox_scanner_t* scanner) {
         }
     }
 
-    add_token_literal(scanner, LOX_TOKEN_TYPE_NUMBER,
+    add_token_literal(scanner, lox_token_type_number,
                       lox_object_new_double(strtod(scanner->source.begin + scanner->start, NULL)));
 }
 
@@ -114,7 +114,7 @@ static void identifier(lox_scanner_t* scanner) {
     if (type != NULL) {
         add_token(scanner, *type);
     } else {
-        add_token(scanner, LOX_TOKEN_TYPE_IDENTIFIER);
+        add_token(scanner, lox_token_type_identifier);
     }
 }
 
@@ -122,50 +122,50 @@ static void scan_token(lox_scanner_t* scanner) {
     char c = advance(scanner);
     switch (c) {
         case '(':
-            add_token(scanner, LOX_TOKEN_TYPE_LEFT_PAREN);
+            add_token(scanner, lox_token_type_left_paren);
             break;
         case ')':
-            add_token(scanner, LOX_TOKEN_TYPE_RIGHT_PAREN);
+            add_token(scanner, lox_token_type_right_paren);
             break;
         case '{':
-            add_token(scanner, LOX_TOKEN_TYPE_LEFT_BRACE);
+            add_token(scanner, lox_token_type_left_brace);
             break;
         case '}':
-            add_token(scanner, LOX_TOKEN_TYPE_RIGHT_BRACE);
+            add_token(scanner, lox_token_type_right_brace);
             break;
         case ',':
-            add_token(scanner, LOX_TOKEN_TYPE_COMMA);
+            add_token(scanner, lox_token_type_comma);
             break;
         case '.':
-            add_token(scanner, LOX_TOKEN_TYPE_DOT);
+            add_token(scanner, lox_token_type_dot);
             break;
         case '-':
-            add_token(scanner, LOX_TOKEN_TYPE_MINUS);
+            add_token(scanner, lox_token_type_minus);
             break;
         case '+':
-            add_token(scanner, LOX_TOKEN_TYPE_PLUS);
+            add_token(scanner, lox_token_type_plus);
             break;
         case ';':
-            add_token(scanner, LOX_TOKEN_TYPE_SEMICOLON);
+            add_token(scanner, lox_token_type_semicolon);
             break;
         case '*':
-            add_token(scanner, LOX_TOKEN_TYPE_STAR);
+            add_token(scanner, lox_token_type_star);
             break;
         case '!':
             add_token(scanner,
-                      match(scanner, '=') ? LOX_TOKEN_TYPE_BANG_EQUAL : LOX_TOKEN_TYPE_BANG);
+                      match(scanner, '=') ? lox_token_type_bang_equal : lox_token_type_bang);
             break;
         case '=':
             add_token(scanner,
-                      match(scanner, '=') ? LOX_TOKEN_TYPE_EQUAL_EQUAL : LOX_TOKEN_TYPE_EQUAL);
+                      match(scanner, '=') ? lox_token_type_equal_equal : lox_token_type_equal);
             break;
         case '<':
             add_token(scanner,
-                      match(scanner, '=') ? LOX_TOKEN_TYPE_LESS_EQUAL : LOX_TOKEN_TYPE_LESS);
+                      match(scanner, '=') ? lox_token_type_less_equal : lox_token_type_less);
             break;
         case '>':
             add_token(scanner,
-                      match(scanner, '=') ? LOX_TOKEN_TYPE_GREATER_EQUAL : LOX_TOKEN_TYPE_GREATER);
+                      match(scanner, '=') ? lox_token_type_greater_equal : lox_token_type_greater);
             break;
         case '/':
             if (match(scanner, '/')) {
@@ -173,7 +173,7 @@ static void scan_token(lox_scanner_t* scanner) {
                     advance(scanner);
                 }
             } else {
-                add_token(scanner, LOX_TOKEN_TYPE_SLASH);
+                add_token(scanner, lox_token_type_slash);
             }
             break;
         case ' ':
@@ -210,37 +210,37 @@ lox_scanner_t lox_scanner_new(lox_context_t* ctx, phyto_string_view_t source) {
         .keywords = lox_scanner_keyword_map_new(20, phyto_hash_default_load, &key_ops, &value_ops),
     };
     lox_scanner_keyword_map_insert(scanner.keywords, phyto_string_view_from_c("and"),
-                                   LOX_TOKEN_TYPE_AND);
+                                   lox_token_type_kw_and);
     lox_scanner_keyword_map_insert(scanner.keywords, phyto_string_view_from_c("class"),
-                                   LOX_TOKEN_TYPE_CLASS);
+                                   lox_token_type_kw_class);
     lox_scanner_keyword_map_insert(scanner.keywords, phyto_string_view_from_c("else"),
-                                   LOX_TOKEN_TYPE_ELSE);
+                                   lox_token_type_kw_else);
     lox_scanner_keyword_map_insert(scanner.keywords, phyto_string_view_from_c("false"),
-                                   LOX_TOKEN_TYPE_FALSE);
+                                   lox_token_type_kw_false);
     lox_scanner_keyword_map_insert(scanner.keywords, phyto_string_view_from_c("for"),
-                                   LOX_TOKEN_TYPE_FOR);
+                                   lox_token_type_kw_for);
     lox_scanner_keyword_map_insert(scanner.keywords, phyto_string_view_from_c("fun"),
-                                   LOX_TOKEN_TYPE_FUN);
+                                   lox_token_type_kw_fun);
     lox_scanner_keyword_map_insert(scanner.keywords, phyto_string_view_from_c("if"),
-                                   LOX_TOKEN_TYPE_IF);
+                                   lox_token_type_kw_if);
     lox_scanner_keyword_map_insert(scanner.keywords, phyto_string_view_from_c("nil"),
-                                   LOX_TOKEN_TYPE_NIL);
+                                   lox_token_type_kw_nil);
     lox_scanner_keyword_map_insert(scanner.keywords, phyto_string_view_from_c("or"),
-                                   LOX_TOKEN_TYPE_OR);
+                                   lox_token_type_kw_or);
     lox_scanner_keyword_map_insert(scanner.keywords, phyto_string_view_from_c("print"),
-                                   LOX_TOKEN_TYPE_PRINT);
+                                   lox_token_type_kw_print);
     lox_scanner_keyword_map_insert(scanner.keywords, phyto_string_view_from_c("return"),
-                                   LOX_TOKEN_TYPE_RETURN);
+                                   lox_token_type_kw_return);
     lox_scanner_keyword_map_insert(scanner.keywords, phyto_string_view_from_c("super"),
-                                   LOX_TOKEN_TYPE_SUPER);
+                                   lox_token_type_kw_super);
     lox_scanner_keyword_map_insert(scanner.keywords, phyto_string_view_from_c("this"),
-                                   LOX_TOKEN_TYPE_THIS);
+                                   lox_token_type_kw_this);
     lox_scanner_keyword_map_insert(scanner.keywords, phyto_string_view_from_c("true"),
-                                   LOX_TOKEN_TYPE_TRUE);
+                                   lox_token_type_kw_true);
     lox_scanner_keyword_map_insert(scanner.keywords, phyto_string_view_from_c("var"),
-                                   LOX_TOKEN_TYPE_VAR);
+                                   lox_token_type_kw_var);
     lox_scanner_keyword_map_insert(scanner.keywords, phyto_string_view_from_c("while"),
-                                   LOX_TOKEN_TYPE_WHILE);
+                                   lox_token_type_kw_while);
     PHYTO_VEC_INIT(&scanner.tokens);
     return scanner;
 }
@@ -251,7 +251,7 @@ lox_token_vec_t lox_scanner_scan_tokens(lox_scanner_t* scanner) {
         scan_token(scanner);
     }
 
-    PHYTO_VEC_PUSH(&scanner->tokens, lox_token_new(LOX_TOKEN_TYPE_EOF, phyto_string_view_empty(),
+    PHYTO_VEC_PUSH(&scanner->tokens, lox_token_new(lox_token_type_eof, phyto_string_view_empty(),
                                                    lox_object_new_nil(), scanner->line));
     return scanner->tokens;
 }
