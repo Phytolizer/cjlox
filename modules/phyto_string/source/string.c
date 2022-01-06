@@ -35,6 +35,9 @@ bool phyto_string_append_fill(phyto_string_t* string, size_t count, char fill) {
 }
 
 phyto_string_view_t phyto_string_view(phyto_string_t string) {
+    if (string.size == 0) {
+        return phyto_string_view_empty();
+    }
     return phyto_string_view_from_ptr_length(string.data, string.size);
 }
 
