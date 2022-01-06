@@ -24,6 +24,7 @@ int32_t lox_run_file(lox_context_t* ctx, const char* filename) {
         return EX_NOINPUT;
     }
     run(ctx, phyto_string_view(source));
+    phyto_string_free(&source);
     if (ctx->had_error) {
         return EX_DATAERR;
     }
@@ -35,10 +36,12 @@ void lox_run_prompt(lox_context_t* ctx) {
         printf("> ");
         phyto_string_t source = phyto_io_read_line(stdin);
         if (source.size == 0) {
+            printf("\n");
             break;
         }
         run(ctx, phyto_string_view(source));
         ctx->had_error = false;
+        phyto_string_free(&source);
     }
 }
 
@@ -51,9 +54,9 @@ void run(lox_context_t* ctx, phyto_string_view_t source) {
     lox_token_vec_t tokens = lox_scanner_scan_tokens(&scanner);
 
     for (size_t i = 0; i < tokens.size; ++i) {
-        printf("%" PHYTO_STRING_FORMAT "\n", PHYTO_STRING_PRINTF_ARGS(tokens.data[i].lexeme));
+        lox_token_print(tokens.data[i]);
+        printf("\n");
     }
-    PHYTO_VEC_FREE(&tokens);
     lox_scanner_free(&scanner);
 }
 

@@ -22,7 +22,6 @@ phyto_string_t phyto_io_read_line(FILE* fp) {
     while (fgets(buffer, sizeof(buffer), fp)) {
         phyto_string_append_c(&result, buffer);
         if (result.data[result.size - 1] == '\n') {
-            result.size--;
             break;
         }
     }

@@ -2,6 +2,7 @@
 
 #include <stdlib.h>
 
+#include "lox/lox.h"
 #include "lox/object.h"
 #include "lox/token_type.h"
 #include "phyto/string_view/string_view.h"
@@ -58,6 +59,10 @@ static void scan_token(lox_scanner_t* scanner) {
             break;
         case '*':
             add_token(scanner, LOX_TOKEN_TYPE_STAR);
+            break;
+        default:
+            lox_error(scanner->ctx, scanner->line,
+                      phyto_string_view_from_c("Unexpected character."));
             break;
     }
 }
