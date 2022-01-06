@@ -47,19 +47,20 @@ typedef struct {
         }                                                                                     \
     } while (false)
 
-#define PHYTO_TEST_RUN_SUBTEST(Name, Cleanup, ...)              \
-    do {                                                        \
-        char* message = phyto_test_subtest_##Name(__VA_ARGS__); \
-        if (message != NULL) {                                  \
-            Cleanup;                                            \
-            return message;                                     \
-        }                                                       \
+#define PHYTO_TEST_RUN_SUBTEST(Name, Cleanup, ...)                                \
+    do {                                                                          \
+        char* message = phyto_test_subtest_##Name(phyto_test_state, __VA_ARGS__); \
+        if (message != NULL) {                                                    \
+            Cleanup;                                                              \
+            return message;                                                       \
+        }                                                                         \
     } while (false)
 
 #define PHYTO_TEST_SUITE_FUNC(Name) \
     void phyto_test_suite_##Name(phyto_test_state_t* phyto_test_state)
 #define PHYTO_TEST_FUNC(Name) char* phyto_test_##Name(phyto_test_state_t* phyto_test_state)
-#define PHYTO_TEST_SUBTEST_FUNC(Name, ...) char* phyto_test_subtest_##Name(__VA_ARGS__)
+#define PHYTO_TEST_SUBTEST_FUNC(Name, ...) \
+    char* phyto_test_subtest_##Name(phyto_test_state_t* phyto_test_state, __VA_ARGS__)
 #define PHYTO_TEST_PASS() return NULL
 #define PHYTO_TEST_SUBTEST_PASS() return NULL
 
