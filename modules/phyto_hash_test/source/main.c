@@ -1,3 +1,5 @@
+#include <ansi_esc/ansi_esc.h>
+#include <inttypes.h>
 #include <phyto/hash/hash.h>
 #include <phyto/string_view/string_view.h>
 #include <phyto/test/test.h>
@@ -61,5 +63,11 @@ PHYTO_TEST_SUITE_FUNC(hash) {
 int main(void) {
     phyto_test_state_t state = {0};
     PHYTO_TEST_RUN_SUITE(hash, &state);
-    return 0;
+    printf(ANSI_ESC_FG_YELLOW "%" PRIu64 ANSI_ESC_RESET " tests, " ANSI_ESC_FG_GREEN
+                              "%" PRIu64 ANSI_ESC_RESET " passes, " ANSI_ESC_FG_RED
+                              "%" PRIu64 ANSI_ESC_RESET " failures, " ANSI_ESC_FG_BLUE
+                              "%" PRIu64 ANSI_ESC_RESET " assertions\n",
+           state.tests_passed + state.tests_failed, state.tests_passed, state.tests_failed,
+           state.assert_count);
+    return (int)state.tests_failed;
 }

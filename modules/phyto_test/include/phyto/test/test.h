@@ -33,16 +33,18 @@ typedef struct {
         phyto_test_suite_##Name(State);       \
     } while (false)
 
-#define PHYTO_TEST_RUN(Name)                                                          \
-    do {                                                                              \
-        fprintf(stderr, " TEST " #Name "\n");                                         \
-        char* message = phyto_test_##Name(phyto_test_state);                          \
-        if (message != NULL) {                                                        \
-            ++phyto_test_state->tests_failed;                                         \
-            fprintf(stderr, ANSI_ESC_FG_RED "FAIL" ANSI_ESC_RESET ": %s\n", message); \
-            free(message);                                                            \
-        }                                                                             \
-        ++phyto_test_state->tests_passed;                                             \
+#define PHYTO_TEST_RUN(Name)                                                                  \
+    do {                                                                                      \
+        fprintf(stderr, "| " ANSI_ESC_FG_YELLOW "TEST" ANSI_ESC_RESET " " #Name "\n");        \
+        char* message = phyto_test_##Name(phyto_test_state);                                  \
+        if (message != NULL) {                                                                \
+            ++phyto_test_state->tests_failed;                                                 \
+            fprintf(stderr, "| -> " ANSI_ESC_FG_RED "FAIL" ANSI_ESC_RESET ": %s\n", message); \
+            free(message);                                                                    \
+        } else {                                                                              \
+            fprintf(stderr, "| -> " ANSI_ESC_FG_GREEN "PASS" ANSI_ESC_RESET "\n");            \
+            ++phyto_test_state->tests_passed;                                                 \
+        }                                                                                     \
     } while (false)
 
 #define PHYTO_TEST_RUN_SUBTEST(Name, Cleanup, ...)              \
