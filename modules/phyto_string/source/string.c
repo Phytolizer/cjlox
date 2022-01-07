@@ -331,11 +331,14 @@ bool phyto_string_is_uppercase(phyto_string_view_t view) {
     return found;
 }
 
-phyto_string_t phyto_string_join(size_t count, phyto_string_view_t sep, ...) {
-    va_list args;
-    va_start(args, sep);
-    phyto_string_t result = phyto_string_join_va(count, sep, args);
-    va_end(args);
+phyto_string_t phyto_string_join(phyto_string_view_t sep, phyto_string_vec_t args) {
+    phyto_string_t result = phyto_string_new();
+    for (size_t i = 0; i < args.size; ++i) {
+        phyto_string_append_view(&result, phyto_string_view(args.data[i]));
+        if (i < args.size - 1) {
+            phyto_string_append_view(&result, sep);
+        }
+    }
     return result;
 }
 

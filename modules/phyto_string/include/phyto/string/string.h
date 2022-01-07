@@ -53,7 +53,7 @@ bool phyto_string_is_printable(phyto_string_view_t view);
 bool phyto_string_is_space(phyto_string_view_t view);
 bool phyto_string_is_titlecase(phyto_string_view_t view);
 bool phyto_string_is_uppercase(phyto_string_view_t view);
-phyto_string_t phyto_string_join(size_t count, phyto_string_view_t sep, ...);
+phyto_string_t phyto_string_join(phyto_string_view_t sep, phyto_string_vec_t args);
 phyto_string_t phyto_string_join_va(size_t count, phyto_string_view_t sep, va_list args);
 phyto_string_t phyto_string_left_justify(phyto_string_view_t view, size_t width, char fill);
 phyto_string_vec_t phyto_string_partition(phyto_string_view_t view, phyto_string_view_t sep);

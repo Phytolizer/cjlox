@@ -154,14 +154,18 @@ declare_module(
     SOURCES main.c
     DEPENDS phyto_io phyto_string phyto_hash
 )
-add_custom_target(
-    lox_ast
+add_custom_command(
+    OUTPUT "${PROJECT_BINARY_DIR}/build_include/lox/ast.h"
+           "${PROJECT_BINARY_DIR}/lox_ast.c"
+    DEPENDS lox_generate_ast
+            "${PROJECT_SOURCE_DIR}/modules/lox_generate_ast/ast/lox.ast"
     COMMAND "${CMAKE_COMMAND}" -E make_directory
             "${PROJECT_BINARY_DIR}/build_include/lox"
     COMMAND
         "$<TARGET_FILE:lox_generate_ast>"
         "${PROJECT_SOURCE_DIR}/modules/lox_generate_ast/ast/lox.ast"
         "${PROJECT_BINARY_DIR}/build_include/lox/ast.h"
+        "${PROJECT_BINARY_DIR}/lox_ast.c"
 )
 declare_module(
     lox
@@ -169,8 +173,14 @@ declare_module(
     SOURCES ast_printer.c lox.c object.c scanner.c token_type.c token.c
     DEPENDS sysexits phyto_io phyto_string phyto_hash
     INCLUDES "${PROJECT_BINARY_DIR}/build_include"
+    ABSOLUTE_SOURCES "${PROJECT_BINARY_DIR}/lox_ast.c"
 )
-add_dependencies(lox lox_ast)
+declare_module(
+    lox_ast_example
+    KIND executable
+    SOURCES main.c
+    DEPENDS lox phyto_string
+)
 declare_module(
     cjlox
     KIND executable
