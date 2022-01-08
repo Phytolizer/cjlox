@@ -1,13 +1,12 @@
 #include "phyto/string_test/center.h"
 
 #include <phyto/string/string.h>
-#include <phyto/string_view/string_view.h>
 
 static PHYTO_TEST_FUNC(empty) {
-    phyto_string_view_t str = phyto_string_view_empty();
+    phyto_string_span_t str = phyto_string_span_empty();
     phyto_string_t centered = phyto_string_center(str, 10, ' ');
-    PHYTO_TEST_ASSERT(phyto_string_view_equal(phyto_string_view(centered),
-                                              phyto_string_view_from_c("          ")),
+    PHYTO_TEST_ASSERT(phyto_string_span_equal(phyto_string_as_span(centered),
+                                              phyto_string_span_from_c("          ")),
                       phyto_string_free(&centered),
                       "center('', 10, ' ') modified the string to '%" PHYTO_STRING_FORMAT "'",
                       PHYTO_STRING_PRINTF_ARGS(centered));
@@ -16,10 +15,10 @@ static PHYTO_TEST_FUNC(empty) {
 }
 
 static PHYTO_TEST_FUNC(identity) {
-    phyto_string_view_t str = phyto_string_view_from_c("Hello, world!");
+    phyto_string_span_t str = phyto_string_span_from_c("Hello, world!");
     phyto_string_t centered = phyto_string_center(str, 10, ' ');
     PHYTO_TEST_ASSERT(
-        phyto_string_view_equal(phyto_string_view(centered), str), phyto_string_free(&centered),
+        phyto_string_span_equal(phyto_string_as_span(centered), str), phyto_string_free(&centered),
         "center('Hello, world!', 10, ' ') modified the string to '%" PHYTO_STRING_FORMAT "'",
         PHYTO_STRING_PRINTF_ARGS(centered));
     phyto_string_free(&centered);
@@ -27,11 +26,11 @@ static PHYTO_TEST_FUNC(identity) {
 }
 
 static PHYTO_TEST_FUNC(even) {
-    phyto_string_view_t str = phyto_string_view_from_c("Hello, world!");
+    phyto_string_span_t str = phyto_string_span_from_c("Hello, world!");
     phyto_string_t centered = phyto_string_center(str, 14, ' ');
     PHYTO_TEST_ASSERT(
-        phyto_string_view_equal(phyto_string_view(centered),
-                                phyto_string_view_from_c("Hello, world! ")),
+        phyto_string_span_equal(phyto_string_as_span(centered),
+                                phyto_string_span_from_c("Hello, world! ")),
         phyto_string_free(&centered),
         "center('Hello, world!', 14, ' ') modified the string to '%" PHYTO_STRING_FORMAT "'",
         PHYTO_STRING_PRINTF_ARGS(centered));
@@ -40,12 +39,12 @@ static PHYTO_TEST_FUNC(even) {
 }
 
 static PHYTO_TEST_FUNC(longer) {
-    phyto_string_view_t str = phyto_string_view_from_c("Hello, world!");
+    phyto_string_span_t str = phyto_string_span_from_c("Hello, world!");
     phyto_string_t centered = phyto_string_center(str, 40, '=');
     PHYTO_TEST_ASSERT(
-        phyto_string_view_equal(
-            phyto_string_view(centered),
-            phyto_string_view_from_c("=============Hello, world!==============")),
+        phyto_string_span_equal(
+            phyto_string_as_span(centered),
+            phyto_string_span_from_c("=============Hello, world!==============")),
         phyto_string_free(&centered),
         "center('Hello, world!', 40, ' ') modified the string to '%" PHYTO_STRING_FORMAT "'",
         PHYTO_STRING_PRINTF_ARGS(centered));

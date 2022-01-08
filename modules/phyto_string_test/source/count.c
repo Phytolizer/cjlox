@@ -1,54 +1,53 @@
 #include "phyto/string_test/count.h"
 
 #include <phyto/string/string.h>
-#include <phyto/string_view/string_view.h>
 #include <stddef.h>
 
 static PHYTO_TEST_FUNC(empty) {
-    phyto_string_view_t str = phyto_string_view_empty();
-    size_t count = phyto_string_count(str, phyto_string_view_from_c("hello"));
+    phyto_string_span_t str = phyto_string_span_empty();
+    size_t count = phyto_string_count_sub(str, phyto_string_span_from_c("hello"));
     PHYTO_TEST_ASSERT(count == 0, (void)0, "count should be 0, not %zu", count);
     PHYTO_TEST_PASS();
 }
 
 static PHYTO_TEST_FUNC(empty_sub) {
-    phyto_string_view_t str = phyto_string_view_from_c("hello");
-    size_t count = phyto_string_count(str, phyto_string_view_empty());
+    phyto_string_span_t str = phyto_string_span_from_c("hello");
+    size_t count = phyto_string_count_sub(str, phyto_string_span_empty());
     PHYTO_TEST_ASSERT(count == 0, (void)0, "count should be 0, not %zu", count);
     PHYTO_TEST_PASS();
 }
 
 static PHYTO_TEST_FUNC(entire) {
-    phyto_string_view_t str = phyto_string_view_from_c("hello");
-    size_t count = phyto_string_count(str, phyto_string_view_from_c("hello"));
+    phyto_string_span_t str = phyto_string_span_from_c("hello");
+    size_t count = phyto_string_count_sub(str, phyto_string_span_from_c("hello"));
     PHYTO_TEST_ASSERT(count == 1, (void)0, "count should be 1, not %zu", count);
     PHYTO_TEST_PASS();
 }
 
 static PHYTO_TEST_FUNC(single_char) {
-    phyto_string_view_t str = phyto_string_view_from_c("hello");
-    size_t count = phyto_string_count(str, phyto_string_view_from_c("h"));
+    phyto_string_span_t str = phyto_string_span_from_c("hello");
+    size_t count = phyto_string_count_sub(str, phyto_string_span_from_c("h"));
     PHYTO_TEST_ASSERT(count == 1, (void)0, "count should be 1, not %zu", count);
     PHYTO_TEST_PASS();
 }
 
 static PHYTO_TEST_FUNC(single_char_twice) {
-    phyto_string_view_t str = phyto_string_view_from_c("hello");
-    size_t count = phyto_string_count(str, phyto_string_view_from_c("l"));
+    phyto_string_span_t str = phyto_string_span_from_c("hello");
+    size_t count = phyto_string_count_sub(str, phyto_string_span_from_c("l"));
     PHYTO_TEST_ASSERT(count == 2, (void)0, "count should be 2, not %zu", count);
     PHYTO_TEST_PASS();
 }
 
 static PHYTO_TEST_FUNC(overlapping) {
-    phyto_string_view_t str = phyto_string_view_from_c("banana");
-    size_t count = phyto_string_count(str, phyto_string_view_from_c("ana"));
+    phyto_string_span_t str = phyto_string_span_from_c("banana");
+    size_t count = phyto_string_count_sub(str, phyto_string_span_from_c("ana"));
     PHYTO_TEST_ASSERT(count == 2, (void)0, "count should be 2, not %zu", count);
     PHYTO_TEST_PASS();
 }
 
 static PHYTO_TEST_FUNC(thrice) {
-    phyto_string_view_t str = phyto_string_view_from_c("aaa");
-    size_t count = phyto_string_count(str, phyto_string_view_from_c("a"));
+    phyto_string_span_t str = phyto_string_span_from_c("aaa");
+    size_t count = phyto_string_count_sub(str, phyto_string_span_from_c("a"));
     PHYTO_TEST_ASSERT(count == 3, (void)0, "count should be 3, not %zu", count);
     PHYTO_TEST_PASS();
 }

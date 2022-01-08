@@ -4,9 +4,9 @@
 
 static PHYTO_TEST_FUNC(empty) {
     phyto_string_t str = phyto_string_new();
-    phyto_string_t caps = phyto_string_capitalize(phyto_string_view(str));
+    phyto_string_t caps = phyto_string_capitalize(phyto_string_as_span(str));
     PHYTO_TEST_ASSERT(
-        phyto_string_view_equal(phyto_string_view(caps), phyto_string_view_from_c("")),
+        phyto_string_span_equal(phyto_string_as_span(caps), phyto_string_span_from_c("")),
         do {
             phyto_string_free(&str);
             phyto_string_free(&caps);
@@ -20,10 +20,10 @@ static PHYTO_TEST_FUNC(empty) {
 
 static PHYTO_TEST_FUNC(allcaps) {
     phyto_string_t str = phyto_string_from_c("HELLO WORLD");
-    phyto_string_t caps = phyto_string_capitalize(phyto_string_view(str));
-    phyto_string_view_t expected = phyto_string_view_from_c("Hello world");
+    phyto_string_t caps = phyto_string_capitalize(phyto_string_as_span(str));
+    phyto_string_span_t expected = phyto_string_span_from_c("Hello world");
     PHYTO_TEST_ASSERT(
-        phyto_string_view_equal(phyto_string_view(caps), expected),
+        phyto_string_span_equal(phyto_string_as_span(caps), expected),
         do {
             phyto_string_free(&str);
             phyto_string_free(&caps);
@@ -37,10 +37,10 @@ static PHYTO_TEST_FUNC(allcaps) {
 
 static PHYTO_TEST_FUNC(alllower) {
     phyto_string_t str = phyto_string_from_c("hello world");
-    phyto_string_t caps = phyto_string_capitalize(phyto_string_view(str));
-    phyto_string_view_t expected = phyto_string_view_from_c("Hello world");
+    phyto_string_t caps = phyto_string_capitalize(phyto_string_as_span(str));
+    phyto_string_span_t expected = phyto_string_span_from_c("Hello world");
     PHYTO_TEST_ASSERT(
-        phyto_string_view_equal(phyto_string_view(caps), expected),
+        phyto_string_span_equal(phyto_string_as_span(caps), expected),
         do {
             phyto_string_free(&str);
             phyto_string_free(&caps);
@@ -54,10 +54,10 @@ static PHYTO_TEST_FUNC(alllower) {
 
 static PHYTO_TEST_FUNC(mixed) {
     phyto_string_t str = phyto_string_from_c("hElLo wOrLd");
-    phyto_string_t caps = phyto_string_capitalize(phyto_string_view(str));
-    phyto_string_view_t expected = phyto_string_view_from_c("Hello world");
+    phyto_string_t caps = phyto_string_capitalize(phyto_string_as_span(str));
+    phyto_string_span_t expected = phyto_string_span_from_c("Hello world");
     PHYTO_TEST_ASSERT(
-        phyto_string_view_equal(phyto_string_view(caps), expected),
+        phyto_string_span_equal(phyto_string_as_span(caps), expected),
         do {
             phyto_string_free(&str);
             phyto_string_free(&caps);
@@ -71,10 +71,10 @@ static PHYTO_TEST_FUNC(mixed) {
 
 static PHYTO_TEST_FUNC(nochange) {
     phyto_string_t str = phyto_string_from_c("Hello world");
-    phyto_string_t caps = phyto_string_capitalize(phyto_string_view(str));
-    phyto_string_view_t expected = phyto_string_view_from_c("Hello world");
+    phyto_string_t caps = phyto_string_capitalize(phyto_string_as_span(str));
+    phyto_string_span_t expected = phyto_string_span_from_c("Hello world");
     PHYTO_TEST_ASSERT(
-        phyto_string_view_equal(phyto_string_view(caps), expected),
+        phyto_string_span_equal(phyto_string_as_span(caps), expected),
         do {
             phyto_string_free(&str);
             phyto_string_free(&caps);

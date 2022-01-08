@@ -20,6 +20,9 @@
         (Span)->size = (End) - (Begin);   \
     } while (0)
 
+#define PHYTO_SPAN_EMPTY \
+    { 0 }
+
 #define PHYTO_SPAN_ITER(Span, Iter) \
     for (*(Iter) = (Span)->begin; *(Iter) != (Span)->end; (*(Iter))++)
 

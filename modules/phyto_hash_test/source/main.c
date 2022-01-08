@@ -1,7 +1,6 @@
 #include <ansi_esc/ansi_esc.h>
 #include <inttypes.h>
 #include <phyto/hash/hash.h>
-#include <phyto/string_view/string_view.h>
 #include <phyto/test/test.h>
 
 PHYTO_HASH_DECL(int_map, int);
@@ -33,7 +32,7 @@ static void intfree(int a) {
 }
 
 static uint64_t int_fnv1a(int a) {
-    return phyto_hash_fnv1a(phyto_string_view_from_ptr_length((char*)&a, sizeof(a)));
+    return phyto_hash_fnv1a(phyto_string_span_from_array((char*)&a, sizeof(a)));
 }
 
 static bool intprint(FILE* fp, int a) {
@@ -67,7 +66,7 @@ PHYTO_TEST_FUNC(allocation) {
 PHYTO_TEST_FUNC(insert_once) {
     int_map_t* map = int_map_new(10, phyto_hash_default_load, &default_key_ops, &default_value_ops);
     PHYTO_TEST_ASSERT(map != NULL, (void)0, "int_map_new() failed");
-    PHYTO_TEST_ASSERT(int_map_insert(map, phyto_string_view_from_c("hello"), 42), int_map_free(map),
+    PHYTO_TEST_ASSERT(int_map_insert(map, phyto_string_span_from_c("hello"), 42), int_map_free(map),
                       "int_map_insert() failed");
     int_map_free(map);
     PHYTO_TEST_PASS();
@@ -76,11 +75,11 @@ PHYTO_TEST_FUNC(insert_once) {
 PHYTO_TEST_FUNC(insert_reallocate) {
     int_map_t* map = int_map_new(1, phyto_hash_default_load, &default_key_ops, &default_value_ops);
     PHYTO_TEST_ASSERT(map != NULL, (void)0, "int_map_new() failed");
-    PHYTO_TEST_ASSERT(int_map_insert(map, phyto_string_view_from_c("hello"), 42), int_map_free(map),
+    PHYTO_TEST_ASSERT(int_map_insert(map, phyto_string_span_from_c("hello"), 42), int_map_free(map),
                       "int_map_insert() failed");
-    PHYTO_TEST_ASSERT(int_map_insert(map, phyto_string_view_from_c("world"), 43), int_map_free(map),
+    PHYTO_TEST_ASSERT(int_map_insert(map, phyto_string_span_from_c("world"), 43), int_map_free(map),
                       "int_map_insert() failed");
-    PHYTO_TEST_ASSERT(int_map_contains(map, phyto_string_view_from_c("hello")), int_map_free(map),
+    PHYTO_TEST_ASSERT(int_map_contains(map, phyto_string_span_from_c("hello")), int_map_free(map),
                       "reallocation deleted key");
     int_map_free(map);
     PHYTO_TEST_PASS();
@@ -89,8 +88,8 @@ PHYTO_TEST_FUNC(insert_reallocate) {
 PHYTO_TEST_FUNC(duplicate_key) {
     int_map_t* map = int_map_new(10, phyto_hash_default_load, &default_key_ops, &default_value_ops);
     PHYTO_TEST_ASSERT(map != NULL, (void)0, "int_map_new() failed");
-    int_map_insert(map, phyto_string_view_from_c("hello"), 42);
-    PHYTO_TEST_ASSERT(!int_map_insert(map, phyto_string_view_from_c("hello"), 43),
+    int_map_insert(map, phyto_string_span_from_c("hello"), 42);
+    PHYTO_TEST_ASSERT(!int_map_insert(map, phyto_string_span_from_c("hello"), 43),
                       int_map_free(map), "int_map_insert() succeeded");
     PHYTO_TEST_RUN_SUBTEST(assert_error, int_map_free(map), map, phyto_hash_flag_duplicate);
     int_map_free(map);
@@ -100,11 +99,11 @@ PHYTO_TEST_FUNC(duplicate_key) {
 PHYTO_TEST_FUNC(not_found) {
     int_map_t* map = int_map_new(10, phyto_hash_default_load, &default_key_ops, &default_value_ops);
     PHYTO_TEST_ASSERT(map != NULL, (void)0, "int_map_new() failed");
-    PHYTO_TEST_ASSERT(!int_map_contains(map, phyto_string_view_from_c("hello")), int_map_free(map),
+    PHYTO_TEST_ASSERT(!int_map_contains(map, phyto_string_span_from_c("hello")), int_map_free(map),
                       "int_map_contains() succeeded");
-    PHYTO_TEST_ASSERT(int_map_insert(map, phyto_string_view_from_c("hello"), 42), int_map_free(map),
+    PHYTO_TEST_ASSERT(int_map_insert(map, phyto_string_span_from_c("hello"), 42), int_map_free(map),
                       "int_map_insert() failed");
-    PHYTO_TEST_ASSERT(!int_map_update(map, phyto_string_view_from_c("goodbye"), 43, NULL),
+    PHYTO_TEST_ASSERT(!int_map_update(map, phyto_string_span_from_c("goodbye"), 43, NULL),
                       int_map_free(map), "int_map_update() succeeded");
     PHYTO_TEST_RUN_SUBTEST(assert_error, int_map_free(map), map, phyto_hash_flag_not_found);
     int_map_free(map);
@@ -114,13 +113,13 @@ PHYTO_TEST_FUNC(not_found) {
 PHYTO_TEST_FUNC(insert_update) {
     int_map_t* map = int_map_new(10, phyto_hash_default_load, &default_key_ops, &default_value_ops);
     PHYTO_TEST_ASSERT(map != NULL, (void)0, "int_map_new() failed");
-    PHYTO_TEST_ASSERT(int_map_insert(map, phyto_string_view_from_c("hello"), 42), int_map_free(map),
+    PHYTO_TEST_ASSERT(int_map_insert(map, phyto_string_span_from_c("hello"), 42), int_map_free(map),
                       "int_map_insert() failed");
-    PHYTO_TEST_ASSERT(int_map_update(map, phyto_string_view_from_c("hello"), 43, NULL),
+    PHYTO_TEST_ASSERT(int_map_update(map, phyto_string_span_from_c("hello"), 43, NULL),
                       int_map_free(map), "int_map_update() failed");
-    PHYTO_TEST_ASSERT(int_map_contains(map, phyto_string_view_from_c("hello")), int_map_free(map),
+    PHYTO_TEST_ASSERT(int_map_contains(map, phyto_string_span_from_c("hello")), int_map_free(map),
                       "int_map_contains() failed");
-    PHYTO_TEST_ASSERT(int_map_get(map, phyto_string_view_from_c("hello")) == 43, int_map_free(map),
+    PHYTO_TEST_ASSERT(int_map_get(map, phyto_string_span_from_c("hello")) == 43, int_map_free(map),
                       "int_map_get() failed");
     int_map_free(map);
     PHYTO_TEST_PASS();
@@ -129,20 +128,20 @@ PHYTO_TEST_FUNC(insert_update) {
 PHYTO_TEST_FUNC(insert_remove) {
     int_map_t* map = int_map_new(10, phyto_hash_default_load, &default_key_ops, &default_value_ops);
     PHYTO_TEST_ASSERT(map != NULL, (void)0, "int_map_new() failed");
-    PHYTO_TEST_ASSERT(int_map_insert(map, phyto_string_view_from_c("hello"), 42), int_map_free(map),
+    PHYTO_TEST_ASSERT(int_map_insert(map, phyto_string_span_from_c("hello"), 42), int_map_free(map),
                       "int_map_insert() failed");
-    PHYTO_TEST_ASSERT(int_map_remove(map, phyto_string_view_from_c("hello"), NULL),
+    PHYTO_TEST_ASSERT(int_map_remove(map, phyto_string_span_from_c("hello"), NULL),
                       int_map_free(map), "int_map_remove() failed");
-    PHYTO_TEST_ASSERT(!int_map_contains(map, phyto_string_view_from_c("hello")), int_map_free(map),
+    PHYTO_TEST_ASSERT(!int_map_contains(map, phyto_string_span_from_c("hello")), int_map_free(map),
                       "int_map_contains() succeeded");
-    PHYTO_TEST_ASSERT(int_map_insert(map, phyto_string_view_from_c("hello"), 42), int_map_free(map),
+    PHYTO_TEST_ASSERT(int_map_insert(map, phyto_string_span_from_c("hello"), 42), int_map_free(map),
                       "int_map_insert() failed");
     int value;
-    PHYTO_TEST_ASSERT(int_map_remove(map, phyto_string_view_from_c("hello"), &value),
+    PHYTO_TEST_ASSERT(int_map_remove(map, phyto_string_span_from_c("hello"), &value),
                       int_map_free(map), "int_map_remove() failed");
     PHYTO_TEST_ASSERT(value == 42, int_map_free(map),
                       "int_map_remove() didn't return the correct value");
-    PHYTO_TEST_ASSERT(!int_map_contains(map, phyto_string_view_from_c("hello")), int_map_free(map),
+    PHYTO_TEST_ASSERT(!int_map_contains(map, phyto_string_span_from_c("hello")), int_map_free(map),
                       "int_map_contains() succeeded");
     int_map_free(map);
     PHYTO_TEST_PASS();
@@ -151,25 +150,25 @@ PHYTO_TEST_FUNC(insert_remove) {
 PHYTO_TEST_FUNC(max) {
     int_map_t* map = int_map_new(10, phyto_hash_default_load, &djb2_key_ops, &default_value_ops);
     PHYTO_TEST_ASSERT(map != NULL, (void)0, "int_map_new() failed");
-    PHYTO_TEST_ASSERT(int_map_insert(map, phyto_string_view_from_c("hello"), 42), int_map_free(map),
+    PHYTO_TEST_ASSERT(int_map_insert(map, phyto_string_span_from_c("hello"), 42), int_map_free(map),
                       "int_map_insert() failed");
-    PHYTO_TEST_ASSERT(int_map_insert(map, phyto_string_view_from_c("world"), 43), int_map_free(map),
+    PHYTO_TEST_ASSERT(int_map_insert(map, phyto_string_span_from_c("world"), 43), int_map_free(map),
                       "int_map_insert() failed");
-    PHYTO_TEST_ASSERT(int_map_insert(map, phyto_string_view_from_c("foo"), 44), int_map_free(map),
+    PHYTO_TEST_ASSERT(int_map_insert(map, phyto_string_span_from_c("foo"), 44), int_map_free(map),
                       "int_map_insert() failed");
-    PHYTO_TEST_ASSERT(int_map_insert(map, phyto_string_view_from_c("bar"), 45), int_map_free(map),
+    PHYTO_TEST_ASSERT(int_map_insert(map, phyto_string_span_from_c("bar"), 45), int_map_free(map),
                       "int_map_insert() failed");
-    PHYTO_TEST_ASSERT(int_map_insert(map, phyto_string_view_from_c("baz"), 46), int_map_free(map),
+    PHYTO_TEST_ASSERT(int_map_insert(map, phyto_string_span_from_c("baz"), 46), int_map_free(map),
                       "int_map_insert() failed");
-    PHYTO_TEST_ASSERT(int_map_insert(map, phyto_string_view_from_c("qux"), 47), int_map_free(map),
+    PHYTO_TEST_ASSERT(int_map_insert(map, phyto_string_span_from_c("qux"), 47), int_map_free(map),
                       "int_map_insert() failed");
-    PHYTO_TEST_ASSERT(int_map_insert(map, phyto_string_view_from_c("quux"), 48), int_map_free(map),
+    PHYTO_TEST_ASSERT(int_map_insert(map, phyto_string_span_from_c("quux"), 48), int_map_free(map),
                       "int_map_insert() failed");
     phyto_string_t k;
     int v;
     PHYTO_TEST_ASSERT(int_map_max(map, &k, &v), int_map_free(map), "int_map_max() failed");
     PHYTO_TEST_ASSERT(
-        phyto_string_view_equal(phyto_string_view(k), phyto_string_view_from_c("world")),
+        phyto_string_span_equal(phyto_string_as_span(k), phyto_string_span_from_c("world")),
         int_map_free(map), "int_map_max() didn't return the correct key");
     PHYTO_TEST_ASSERT(v == 43, int_map_free(map), "int_map_max() didn't return the correct value");
     int_map_free(map);
@@ -179,25 +178,25 @@ PHYTO_TEST_FUNC(max) {
 PHYTO_TEST_FUNC(min) {
     int_map_t* map = int_map_new(10, phyto_hash_default_load, &default_key_ops, &default_value_ops);
     PHYTO_TEST_ASSERT(map != NULL, (void)0, "int_map_new() failed");
-    PHYTO_TEST_ASSERT(int_map_insert(map, phyto_string_view_from_c("hello"), 42), int_map_free(map),
+    PHYTO_TEST_ASSERT(int_map_insert(map, phyto_string_span_from_c("hello"), 42), int_map_free(map),
                       "int_map_insert() failed");
-    PHYTO_TEST_ASSERT(int_map_insert(map, phyto_string_view_from_c("world"), 43), int_map_free(map),
+    PHYTO_TEST_ASSERT(int_map_insert(map, phyto_string_span_from_c("world"), 43), int_map_free(map),
                       "int_map_insert() failed");
-    PHYTO_TEST_ASSERT(int_map_insert(map, phyto_string_view_from_c("foo"), 44), int_map_free(map),
+    PHYTO_TEST_ASSERT(int_map_insert(map, phyto_string_span_from_c("foo"), 44), int_map_free(map),
                       "int_map_insert() failed");
-    PHYTO_TEST_ASSERT(int_map_insert(map, phyto_string_view_from_c("bar"), 45), int_map_free(map),
+    PHYTO_TEST_ASSERT(int_map_insert(map, phyto_string_span_from_c("bar"), 45), int_map_free(map),
                       "int_map_insert() failed");
-    PHYTO_TEST_ASSERT(int_map_insert(map, phyto_string_view_from_c("baz"), 46), int_map_free(map),
+    PHYTO_TEST_ASSERT(int_map_insert(map, phyto_string_span_from_c("baz"), 46), int_map_free(map),
                       "int_map_insert() failed");
-    PHYTO_TEST_ASSERT(int_map_insert(map, phyto_string_view_from_c("qux"), 47), int_map_free(map),
+    PHYTO_TEST_ASSERT(int_map_insert(map, phyto_string_span_from_c("qux"), 47), int_map_free(map),
                       "int_map_insert() failed");
-    PHYTO_TEST_ASSERT(int_map_insert(map, phyto_string_view_from_c("quux"), 48), int_map_free(map),
+    PHYTO_TEST_ASSERT(int_map_insert(map, phyto_string_span_from_c("quux"), 48), int_map_free(map),
                       "int_map_insert() failed");
     phyto_string_t k;
     int v;
     PHYTO_TEST_ASSERT(int_map_min(map, &k, &v), int_map_free(map), "int_map_min() failed");
     PHYTO_TEST_ASSERT(
-        phyto_string_view_equal(phyto_string_view(k), phyto_string_view_from_c("bar")),
+        phyto_string_span_equal(phyto_string_as_span(k), phyto_string_span_from_c("bar")),
         int_map_free(map), "int_map_min() didn't return the correct key");
     PHYTO_TEST_ASSERT(v == 45, int_map_free(map), "int_map_min() didn't return the correct value");
     int_map_free(map);
@@ -234,7 +233,7 @@ PHYTO_TEST_FUNC(empty) {
 PHYTO_TEST_FUNC(one) {
     int_map_t* map = int_map_new(10, phyto_hash_default_load, &default_key_ops, &default_value_ops);
     PHYTO_TEST_ASSERT(map != NULL, (void)0, "int_map_new() failed");
-    PHYTO_TEST_ASSERT(int_map_insert(map, phyto_string_view_from_c("hello"), 42), int_map_free(map),
+    PHYTO_TEST_ASSERT(int_map_insert(map, phyto_string_span_from_c("hello"), 42), int_map_free(map),
                       "int_map_insert() failed");
     PHYTO_TEST_ASSERT(!int_map_empty(map), int_map_free(map), "int_map_empty() succeeded");
     int_map_iter_t iter = int_map_iter_start(map);
@@ -247,7 +246,7 @@ PHYTO_TEST_FUNC(one) {
     PHYTO_TEST_ASSERT(int_map_iter_at_end(&iter), int_map_free(map),
                       "int_map_iter_at_end() failed");
     PHYTO_TEST_ASSERT(
-        phyto_string_view_equal(int_map_iter_key(&iter), phyto_string_view_from_c("hello")),
+        phyto_string_span_equal(int_map_iter_key(&iter), phyto_string_span_from_c("hello")),
         int_map_free(map), "int_map_iter_key() wasn't 'hello'");
     PHYTO_TEST_ASSERT(int_map_iter_value(&iter) == 42, int_map_free(map),
                       "int_map_iter_value() wasn't 42");
@@ -258,7 +257,7 @@ PHYTO_TEST_FUNC(one) {
 PHYTO_TEST_SUBTEST_FUNC(insert_alphabet, int_map_t* map) {
     for (int x = 'a'; x <= 'z'; ++x) {
         char cx = (char)x;
-        PHYTO_TEST_ASSERT(int_map_insert(map, phyto_string_view_from_ptr_length(&cx, 1), x + 42),
+        PHYTO_TEST_ASSERT(int_map_insert(map, phyto_string_span_from_array(&cx, 1), x + 42),
                           int_map_free(map), "int_map_insert() failed");
     }
     PHYTO_TEST_SUBTEST_PASS();
@@ -272,7 +271,7 @@ PHYTO_TEST_FUNC(many) {
     PHYTO_TEST_ASSERT(int_map_iter_at_start(&iter), int_map_free(map),
                       "int_map_iter_at_start() failed");
     for (size_t i = 0; i < 26; ++i) {
-        phyto_string_view_t k = int_map_iter_key(&iter);
+        phyto_string_span_t k = int_map_iter_key(&iter);
         int v = int_map_iter_value(&iter);
         PHYTO_TEST_ASSERT(k.size == 1, int_map_free(map), "int_map_iter_key() wasn't 1 byte");
         PHYTO_TEST_ASSERT(k.begin[0] >= 'a' && k.begin[0] <= 'z', int_map_free(map),
@@ -297,7 +296,7 @@ PHYTO_TEST_FUNC(reverse) {
     PHYTO_TEST_ASSERT(int_map_iter_at_end(&iter), int_map_free(map),
                       "int_map_iter_at_end() failed");
     for (size_t i = 0; i < 26; ++i) {
-        phyto_string_view_t k = int_map_iter_key(&iter);
+        phyto_string_span_t k = int_map_iter_key(&iter);
         int v = int_map_iter_value(&iter);
         PHYTO_TEST_ASSERT(k.size == 1, int_map_free(map), "int_map_iter_key() wasn't 1 byte");
         PHYTO_TEST_ASSERT(k.begin[0] >= 'a' && k.begin[0] <= 'z', int_map_free(map),
@@ -320,7 +319,7 @@ PHYTO_TEST_FUNC(steps) {
     PHYTO_TEST_ASSERT(int_map_iter_at_start(&iter), int_map_free(map),
                       "int_map_iter_at_start() failed");
     for (size_t i = 0; !int_map_iter_at_end(&iter); ++i) {
-        phyto_string_view_t k = int_map_iter_key(&iter);
+        phyto_string_span_t k = int_map_iter_key(&iter);
         int v = int_map_iter_value(&iter);
         PHYTO_TEST_ASSERT(k.size == 1, int_map_free(map), "int_map_iter_key() wasn't 1 byte");
         PHYTO_TEST_ASSERT(k.begin[0] >= 'a' && k.begin[0] <= 'z', int_map_free(map),
@@ -347,7 +346,7 @@ PHYTO_TEST_FUNC(go_to) {
     PHYTO_TEST_ASSERT(int_map_iter_at_start(&iter), int_map_free(map),
                       "int_map_iter_at_start() failed");
     for (size_t i = 0; i < 26; ++i) {
-        phyto_string_view_t k = int_map_iter_key(&iter);
+        phyto_string_span_t k = int_map_iter_key(&iter);
         int v = int_map_iter_value(&iter);
         PHYTO_TEST_ASSERT(k.size == 1, int_map_free(map), "int_map_iter_key() wasn't 1 byte");
         PHYTO_TEST_ASSERT(k.begin[0] >= 'a' && k.begin[0] <= 'z', int_map_free(map),
@@ -376,10 +375,10 @@ PHYTO_TEST_FUNC(to_string) {
 
     int_map_to_string(map, stdout);
     printf("\n");
-    int_map_print(map, stdout, phyto_string_view_from_c("==int_map_print==\n"),
-                  phyto_string_view_from_c("\n"),
-                  phyto_string_view_from_c("\n==end int_map_print=="),
-                  phyto_string_view_from_c(":"));
+    int_map_print(map, stdout, phyto_string_span_from_c("==int_map_print==\n"),
+                  phyto_string_span_from_c("\n"),
+                  phyto_string_span_from_c("\n==end int_map_print=="),
+                  phyto_string_span_from_c(":"));
     printf("\n");
     int_map_free(map);
     PHYTO_TEST_PASS();

@@ -3,8 +3,10 @@
 #include <phyto/string/string.h>
 #include <stdio.h>
 
+PHYTO_COLLECTIONS_DYNAMIC_ARRAY_IMPL(lox_token_vec, lox_token_t);
+
 lox_token_t lox_token_new(lox_token_type_t type,
-                          phyto_string_view_t lexeme,
+                          phyto_string_span_t lexeme,
                           lox_object_t literal,
                           uint64_t line) {
     lox_token_t token = {
@@ -23,12 +25,12 @@ void lox_token_free(lox_token_t* token) {
 
 phyto_string_t lox_token_to_string(lox_token_t token) {
     phyto_string_t str = phyto_string_new();
-    phyto_string_append_view(&str, lox_token_type_name(token.type));
-    phyto_string_push(&str, ' ');
-    phyto_string_append_view(&str, phyto_string_view(token.lexeme));
-    phyto_string_push(&str, ' ');
+    phyto_string_extend(&str, lox_token_type_name(token.type));
+    phyto_string_append(&str, ' ');
+    phyto_string_extend(&str, phyto_string_as_span(token.lexeme));
+    phyto_string_append(&str, ' ');
     phyto_string_t literal = lox_object_to_string(token.literal);
-    phyto_string_append_view(&str, phyto_string_view(literal));
+    phyto_string_extend(&str, phyto_string_as_span(literal));
     phyto_string_free(&literal);
     return str;
 }

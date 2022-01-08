@@ -1,6 +1,6 @@
 #include "phyto/hash/hash.h"
 
-uint64_t phyto_hash_fnv1a(phyto_string_view_t s) {
+uint64_t phyto_hash_fnv1a(phyto_string_span_t s) {
     uint64_t hash = 0xcbf29ce484222325;
     for (size_t i = 0; i < s.size; i++) {
         hash ^= (uint8_t)s.begin[i];
@@ -9,7 +9,7 @@ uint64_t phyto_hash_fnv1a(phyto_string_view_t s) {
     return hash;
 }
 
-uint64_t phyto_hash_djb2(phyto_string_view_t s) {
+uint64_t phyto_hash_djb2(phyto_string_span_t s) {
     uint64_t hash = 5381;
     for (size_t i = 0; i < s.size; i++) {
         hash = ((hash << 5) + hash) + (uint8_t)s.begin[i];
@@ -26,8 +26,8 @@ static const char* const hash_flag_descriptions[] = {
 #undef X
 };
 
-phyto_string_view_t phyto_hash_flag_explain(phyto_hash_flag_t flag) {
-    return phyto_string_view_from_c(hash_flag_descriptions[flag]);
+phyto_string_span_t phyto_hash_flag_explain(phyto_hash_flag_t flag) {
+    return phyto_string_span_from_c(hash_flag_descriptions[flag]);
 }
 
 static const uint64_t primes[] = {

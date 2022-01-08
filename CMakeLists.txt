@@ -85,7 +85,19 @@ declare_module(ansi_esc KIND interface)
 declare_module(
     nonstd
     KIND library
-    SOURCES asprintf.c ctype.c strtok.c strspn.c strpbrk.c strdup.c
+    SOURCES asprintf.c
+            ctype.c
+            qsort.c
+            strtok.c
+            strspn.c
+            strpbrk.c
+            strdup.c
+)
+declare_module(phyto_span KIND interface)
+declare_module(
+    phyto_collections
+    KIND interface
+    DEPENDS phyto_span nonstd
 )
 declare_module(
     phyto_test
@@ -98,29 +110,22 @@ declare_module(
     SOURCES main.c
     DEPENDS phyto_vec phyto_test
 )
-declare_module(phyto_span KIND interface)
-declare_module(
-    phyto_string_view
-    KIND library
-    SOURCES string_view.c
-    DEPENDS phyto_span
-)
 declare_module(
     phyto_string
     KIND library
     SOURCES string.c
-    DEPENDS phyto_string_view phyto_vec nonstd
+    DEPENDS phyto_collections nonstd
 )
 declare_module(
     phyto_string_test
     KIND executable
     SOURCES append_fill.c
-            append_view.c
             capitalize.c
             center.c
             count.c
             ends_with.c
             expand_tabs.c
+            extend.c
             main.c
             own.c
             starts_with.c
@@ -131,7 +136,7 @@ declare_module(
     phyto_hash
     KIND library
     SOURCES hash.c
-    DEPENDS phyto_string phyto_string_view phyto_span
+    DEPENDS phyto_string phyto_span
 )
 
 declare_module(
@@ -145,7 +150,7 @@ declare_module(
     phyto_io
     KIND library
     SOURCES io.c
-    DEPENDS phyto_string phyto_string_view
+    DEPENDS phyto_string
 )
 
 declare_module(

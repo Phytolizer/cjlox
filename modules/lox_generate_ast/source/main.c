@@ -2,8 +2,6 @@
 #include <phyto/hash/hash.h>
 #include <phyto/io/io.h>
 #include <phyto/string/string.h>
-#include <phyto/string_view/string_view.h>
-#include <phyto/vec/vec.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -11,12 +9,12 @@
 #define NS "lox"
 #define NS_UPPER "LOX"
 
-#define SSV(s) phyto_string_view(s)
-#define SV(c) phyto_string_view_from_c(c)
+#define SSP(s) phyto_string_as_span(s)
+#define SP(c) phyto_string_span_from_c(c)
 
-#define SV_FMT PHYTO_STRING_FORMAT
+#define SP_FMT PHYTO_STRING_FORMAT
 #define STR_FMT PHYTO_STRING_FORMAT
-#define SV_PRN PHYTO_STRING_VIEW_PRINTF_ARGS
+#define SP_PRN PHYTO_STRING_VIEW_PRINTF_ARGS
 #define STR_PRN PHYTO_STRING_PRINTF_ARGS
 
 #define TOKS_X  \
@@ -48,11 +46,16 @@ typedef struct {
     phyto_string_t text;
 } tok_t;
 
-typedef PHYTO_VEC_TYPE(tok_t) toks_t;
+PHYTO_COLLECTIONS_DYNAMIC_ARRAY_DECL(toks, tok_t);
+PHYTO_COLLECTIONS_DYNAMIC_ARRAY_IMPL(toks, tok_t);
 
-#define TOKS_INIT PHYTO_VEC_INIT
-#define TOKS_PUSH PHYTO_VEC_PUSH
-#define TOKS_FREE PHYTO_VEC_FREE
+static void tok_free(tok_t* tok) {
+    phyto_string_free(&tok->text);
+}
+
+static const toks_callbacks_t toks_callbacks = {
+    .free_cb = tok_free,
+};
 
 PHYTO_HASH_DECL(kwmap, ttype_t);
 PHYTO_HASH_IMPL(kwmap, ttype_t);
@@ -77,7 +80,7 @@ static bool is_ident_part(char c) {
     return is_ident_start(c) || c == '/' || c == '.' || nonstd_isdigit(c);
 }
 
-static void lex_file(toks_t* toks, kwmap_t* kwmap, phyto_string_view_t input) {
+static void lex_file(toks_t* toks, kwmap_t* kwmap, phyto_string_span_t input) {
     const char* start = input.begin;
     const char* current = start;
 
@@ -86,27 +89,27 @@ static void lex_file(toks_t* toks, kwmap_t* kwmap, phyto_string_view_t input) {
         switch (*current) {
             case '[':
                 current++;
-                TOKS_PUSH(toks, (tok_t){.type = ttype_lbrack});
+                toks_append(toks, (tok_t){.type = ttype_lbrack});
                 break;
             case ']':
                 current++;
-                TOKS_PUSH(toks, (tok_t){.type = ttype_rbrack});
+                toks_append(toks, (tok_t){.type = ttype_rbrack});
                 break;
             case '{':
                 current++;
-                TOKS_PUSH(toks, (tok_t){.type = ttype_lbrace});
+                toks_append(toks, (tok_t){.type = ttype_lbrace});
                 break;
             case '}':
                 current++;
-                TOKS_PUSH(toks, (tok_t){.type = ttype_rbrace});
+                toks_append(toks, (tok_t){.type = ttype_rbrace});
                 break;
             case ':':
                 current++;
-                TOKS_PUSH(toks, (tok_t){.type = ttype_colon});
+                toks_append(toks, (tok_t){.type = ttype_colon});
                 break;
             case ',':
                 current++;
-                TOKS_PUSH(toks, (tok_t){.type = ttype_comma});
+                toks_append(toks, (tok_t){.type = ttype_comma});
                 break;
             case ' ':
             case '\t':
@@ -121,14 +124,14 @@ static void lex_file(toks_t* toks, kwmap_t* kwmap, phyto_string_view_t input) {
                     while (current < input.end && is_ident_part(*current)) {
                         current++;
                     }
-                    phyto_string_view_t ident = phyto_string_view_new(start, current);
+                    phyto_string_span_t ident = phyto_string_span_new(start, current);
                     ttype_t* res = kwmap_get_ref(kwmap, ident);
                     ttype_t type = res ? *res : ttype_ident;
-                    TOKS_PUSH(toks, ((tok_t){
-                                        .type = type,
-                                        .text = type == ttype_ident ? phyto_string_own(ident)
-                                                                    : (phyto_string_t){0},
-                                    }));
+                    toks_append(toks, ((tok_t){
+                                          .type = type,
+                                          .text = type == ttype_ident ? phyto_string_own(ident)
+                                                                      : (phyto_string_t){0},
+                                      }));
                 } else {
                     current++;
                 }
@@ -147,50 +150,56 @@ typedef enum {
     stype_node,
 } stype_t;
 
-typedef PHYTO_VEC_TYPE(phyto_string_view_t) sviews_t;
+PHYTO_COLLECTIONS_DYNAMIC_ARRAY_DECL(sspans, phyto_string_span_t);
+PHYTO_COLLECTIONS_DYNAMIC_ARRAY_IMPL(sspans, phyto_string_span_t);
+
+static const sspans_callbacks_t sspans_callbacks = {0};
 
 typedef struct {
-    phyto_string_view_t name;
+    phyto_string_span_t name;
     phyto_string_t type;
 } field_t;
 
-typedef PHYTO_VEC_TYPE(field_t) fields_t;
+PHYTO_COLLECTIONS_DYNAMIC_ARRAY_DECL(fields, field_t);
+PHYTO_COLLECTIONS_DYNAMIC_ARRAY_IMPL(fields, field_t);
+
+static void field_free(field_t* f) {
+    phyto_string_free(&f->type);
+}
+
+static const fields_callbacks_t fields_callbacks = {
+    .free_cb = field_free,
+};
 
 typedef struct {
-    phyto_string_view_t name;
+    phyto_string_span_t name;
     fields_t fields;
 } node_t;
 
-typedef PHYTO_VEC_TYPE(node_t) nodes_t;
+PHYTO_COLLECTIONS_DYNAMIC_ARRAY_DECL(nodes, node_t);
+PHYTO_COLLECTIONS_DYNAMIC_ARRAY_IMPL(nodes, node_t);
+
+static void node_free(node_t* node) {
+    fields_free(&node->fields);
+}
+
+static const nodes_callbacks_t nodes_callbacks = {
+    .free_cb = node_free,
+};
 
 typedef struct {
     stype_t type;
     union {
-        sviews_t includes;
+        sspans_t includes;
         node_t node;
     };
 } stmt_t;
-
-static void fields_push(fields_t* fields, field_t field) {
-    PHYTO_VEC_PUSH(fields, field);
-}
-
-void fields_free(fields_t* fields) {
-    for (size_t i = 0; i < fields->size; i++) {
-        field_t* field = &fields->data[i];
-        phyto_string_free(&field->type);
-    }
-    PHYTO_VEC_FREE(fields);
-}
-
-#define SVIEWS_PUSH PHYTO_VEC_PUSH
-#define SVIEWS_FREE PHYTO_VEC_FREE
 
 void stmt_free(stmt_t* stmt) {
     if (stmt->type == stype_node) {
         fields_free(&stmt->node.fields);
     } else {
-        SVIEWS_FREE(&stmt->includes);
+        sspans_free(&stmt->includes);
     }
 }
 
@@ -206,6 +215,7 @@ static stmt_t parse_stmt(parser_t* p) {
     switch (current(p)->type) {
         case ttype_includes:
             stmt.type = stype_includes;
+            stmt.includes = sspans_init(&sspans_callbacks);
             ++p->pos;
             if (current(p)->type != ttype_lbrack) {
                 fprintf(stderr, "expected '['\n");
@@ -213,9 +223,9 @@ static stmt_t parse_stmt(parser_t* p) {
             }
             ++p->pos;
             while (current(p)->type == ttype_ident) {
-                phyto_string_view_t include = SSV(current(p)->text);
-                fprintf(stderr, "include: %" SV_FMT "\n", SV_PRN(include));
-                SVIEWS_PUSH(&stmt.includes, include);
+                phyto_string_span_t include = SSP(current(p)->text);
+                fprintf(stderr, "include: %" SP_FMT "\n", SP_PRN(include));
+                sspans_append(&stmt.includes, include);
                 ++p->pos;
             }
             if (current(p)->type != ttype_rbrack) {
@@ -227,7 +237,8 @@ static stmt_t parse_stmt(parser_t* p) {
             return stmt;
         case ttype_ident:
             stmt.type = stype_node;
-            stmt.node.name = SSV(current(p)->text);
+            stmt.node.name = SSP(current(p)->text);
+            stmt.node.fields = fields_init(&fields_callbacks);
             ++p->pos;
             if (current(p)->type != ttype_lbrace) {
                 fprintf(stderr, "expected '{'\n");
@@ -235,7 +246,7 @@ static stmt_t parse_stmt(parser_t* p) {
             }
             ++p->pos;
             while (true) {
-                field_t field = {.name = SSV(current(p)->text)};
+                field_t field = {.name = SSP(current(p)->text)};
                 ++p->pos;
                 if (current(p)->type != ttype_colon) {
                     stmt_free(&stmt);
@@ -244,16 +255,15 @@ static stmt_t parse_stmt(parser_t* p) {
                 }
                 ++p->pos;
                 phyto_string_t type = phyto_string_new();
-                phyto_string_vec_t parts;
-                PHYTO_VEC_INIT(&parts);
+                phyto_string_vec_t parts = phyto_string_vec_init(&phyto_string_vec_callbacks);
                 while (current(p)->type == ttype_ident) {
-                    PHYTO_VEC_PUSH(&parts, phyto_string_copy(current(p)->text));
+                    phyto_string_vec_append(&parts, phyto_string_copy(current(p)->text));
                     ++p->pos;
                 }
-                type = phyto_string_join(phyto_string_view_from_c(" "), parts);
+                type = phyto_string_join(phyto_string_span_from_c(" "), parts);
                 phyto_string_vec_free(&parts);
                 field.type = type;
-                fields_push(&stmt.node.fields, field);
+                fields_append(&stmt.node.fields, field);
                 if (current(p)->type == ttype_comma) {
                     ++p->pos;
                 } else if (current(p)->type == ttype_rbrace) {
@@ -271,32 +281,32 @@ static stmt_t parse_stmt(parser_t* p) {
     }
 }
 
-static void print_discriminator_type_name(phyto_string_view_t name, FILE* output) {
-    fprintf(output, NS "_%" SV_FMT "_type_t", SV_PRN(name));
+static void print_discriminator_type_name(phyto_string_span_t name, FILE* output) {
+    fprintf(output, NS "_%" SP_FMT "_type_t", SP_PRN(name));
 }
 
-static void print_base_class_name(phyto_string_view_t tree_name, FILE* output) {
-    fprintf(output, NS "_%" SV_FMT "_t", SV_PRN(tree_name));
+static void print_base_class_name(phyto_string_span_t tree_name, FILE* output) {
+    fprintf(output, NS "_%" SP_FMT "_t", SP_PRN(tree_name));
 }
 
-static void print_adjective_noun(phyto_string_view_t noun, phyto_string_view_t adj, FILE* output) {
-    fprintf(output, "%" SV_FMT "_%" SV_FMT, SV_PRN(adj), SV_PRN(noun));
+static void print_adjective_noun(phyto_string_span_t noun, phyto_string_span_t adj, FILE* output) {
+    fprintf(output, "%" SP_FMT "_%" SP_FMT, SP_PRN(adj), SP_PRN(noun));
 }
 
-static void print_derived_type_name(phyto_string_view_t tree,
-                                    phyto_string_view_t node,
+static void print_derived_type_name(phyto_string_span_t tree,
+                                    phyto_string_span_t node,
                                     FILE* output) {
     fprintf(output, NS "_");
     print_adjective_noun(tree, node, output);
     fprintf(output, "_t");
 }
 
-static void dump_types(phyto_string_view_t tree_name, nodes_t nodes, FILE* output) {
+static void dump_types(phyto_string_span_t tree_name, nodes_t nodes, FILE* output) {
     fprintf(output, "typedef enum {\n");
     for (size_t i = 0; i < nodes.size; ++i) {
         const node_t* node = &nodes.data[i];
-        fprintf(output, "    " NS "_%" SV_FMT "_type_%" SV_FMT ",\n", SV_PRN(tree_name),
-                SV_PRN(node->name));
+        fprintf(output, "    " NS "_%" SP_FMT "_type_%" SP_FMT ",\n", SP_PRN(tree_name),
+                SP_PRN(node->name));
     }
     fprintf(output, "} ");
     print_discriminator_type_name(tree_name, output);
@@ -315,14 +325,14 @@ static void dump_types(phyto_string_view_t tree_name, nodes_t nodes, FILE* outpu
         fprintf(output, " base;\n");
         for (size_t j = 0; j < nodes.data[i].fields.size; ++j) {
             const field_t* field = &nodes.data[i].fields.data[j];
-            if (phyto_string_view_equal(SSV(field->type), tree_name)) {
+            if (phyto_string_span_equal(SSP(field->type), tree_name)) {
                 fprintf(output, "    ");
                 print_base_class_name(tree_name, output);
-                fprintf(output, "* %" SV_FMT, SV_PRN(field->name));
+                fprintf(output, "* %" SP_FMT, SP_PRN(field->name));
                 fprintf(output, ";\n");
             } else {
-                fprintf(output, "    %" SV_FMT " %" SV_FMT ";\n", STR_PRN(field->type),
-                        SV_PRN(field->name));
+                fprintf(output, "    %" SP_FMT " %" SP_FMT ";\n", STR_PRN(field->type),
+                        SP_PRN(field->name));
             }
         }
         fprintf(output, "} ");
@@ -335,18 +345,26 @@ typedef struct {
     phyto_string_t signature;
 } visitor_func_macro_t;
 
-typedef PHYTO_VEC_TYPE(visitor_func_macro_t) visitor_func_macros_t;
+PHYTO_COLLECTIONS_DYNAMIC_ARRAY_DECL(visitor_func_macros, visitor_func_macro_t);
+PHYTO_COLLECTIONS_DYNAMIC_ARRAY_IMPL(visitor_func_macros, visitor_func_macro_t);
 
-static visitor_func_macros_t dump_visitor_func_macros(phyto_string_view_t tree_name,
+static void visitor_func_macro_free(visitor_func_macro_t* mac) {
+    phyto_string_free(&mac->signature);
+}
+
+static const visitor_func_macros_callbacks_t visitor_func_macro_callbacks = {
+    .free_cb = visitor_func_macro_free,
+};
+
+static visitor_func_macros_t dump_visitor_func_macros(phyto_string_span_t tree_name,
                                                       nodes_t nodes,
                                                       FILE* output) {
-    visitor_func_macros_t result;
-    PHYTO_VEC_INIT(&result);
+    visitor_func_macros_t result = visitor_func_macros_init(&visitor_func_macro_callbacks);
     phyto_string_t tree_name_upper = phyto_string_upper(tree_name);
     for (size_t i = 0; i < nodes.size; ++i) {
         phyto_string_t node_name_upper = phyto_string_upper(nodes.data[i].name);
         phyto_string_t macro_signature = phyto_string_from_sprintf(
-            NS_UPPER "_%" SV_FMT "_VISITOR_VISIT_%" SV_FMT "_FUNC(Ns, Name, T)",
+            NS_UPPER "_%" SP_FMT "_VISITOR_VISIT_%" SP_FMT "_FUNC(Ns, Name, T)",
             STR_PRN(tree_name_upper), STR_PRN(node_name_upper));
         phyto_string_free(&node_name_upper);
         fprintf(output, "#define %" STR_FMT " \\\n", STR_PRN(macro_signature));
@@ -355,28 +373,28 @@ static visitor_func_macros_t dump_visitor_func_macros(phyto_string_view_t tree_n
         fprintf(output, "(Ns##_##Name##_t* visitor, ");
         print_derived_type_name(tree_name, nodes.data[i].name, output);
         fprintf(output, "* node)\n");
-        PHYTO_VEC_PUSH(&result, ((visitor_func_macro_t){macro_signature}));
+        visitor_func_macros_append(&result, (visitor_func_macro_t){macro_signature});
     }
     phyto_string_free(&tree_name_upper);
     return result;
 }
 
-static void dump_toplevel_header_macro(phyto_string_view_t tree_name,
+static void dump_toplevel_header_macro(phyto_string_span_t tree_name,
                                        nodes_t nodes,
                                        visitor_func_macros_t visitor_func_macros,
                                        FILE* output) {
     phyto_string_t tree_name_upper = phyto_string_upper(tree_name);
-    fprintf(output, "#define " NS_UPPER "_%" SV_FMT "_VISITOR_DECL(Ns, Name, T) \\\n",
+    fprintf(output, "#define " NS_UPPER "_%" SP_FMT "_VISITOR_DECL(Ns, Name, T) \\\n",
             STR_PRN(tree_name_upper));
-    fprintf(output, "    T " NS "_%" SV_FMT "_accept_##Name(", SV_PRN(tree_name));
+    fprintf(output, "    T " NS "_%" SP_FMT "_accept_##Name(", SP_PRN(tree_name));
     print_base_class_name(tree_name, output);
     fprintf(output, "* node, Ns##_##Name##_t* visitor); \\\n");
     for (size_t i = 0; i < nodes.size; ++i) {
         fprintf(output,
-                "    T " NS "_%" SV_FMT "_%" SV_FMT "_accept_##Name(" NS "_%" SV_FMT "_%" SV_FMT
+                "    T " NS "_%" SP_FMT "_%" SP_FMT "_accept_##Name(" NS "_%" SP_FMT "_%" SP_FMT
                 "_t* self, Ns##_##Name##_t* visitor); \\\n",
-                SV_PRN(nodes.data[i].name), SV_PRN(tree_name), SV_PRN(nodes.data[i].name),
-                SV_PRN(tree_name));
+                SP_PRN(nodes.data[i].name), SP_PRN(tree_name), SP_PRN(nodes.data[i].name),
+                SP_PRN(tree_name));
         fprintf(output, "    ");
         fprintf(output, "%" STR_FMT, STR_PRN(visitor_func_macros.data[i].signature));
         if (i < nodes.size - 1) {
@@ -387,38 +405,37 @@ static void dump_toplevel_header_macro(phyto_string_view_t tree_name,
     phyto_string_free(&tree_name_upper);
 }
 
-static void dump_toplevel_source_macro(phyto_string_view_t tree_name, nodes_t nodes, FILE* output) {
+static void dump_toplevel_source_macro(phyto_string_span_t tree_name, nodes_t nodes, FILE* output) {
     phyto_string_t tree_name_upper = phyto_string_upper(tree_name);
-    fprintf(output, "#define " NS_UPPER "_%" SV_FMT "_VISITOR_IMPL(Ns, Name, T) \\\n",
+    fprintf(output, "#define " NS_UPPER "_%" SP_FMT "_VISITOR_IMPL(Ns, Name, T) \\\n",
             STR_PRN(tree_name_upper));
-    phyto_string_free(&tree_name_upper);
     fprintf(output,
-            "    T " NS "_%" SV_FMT "_accept_##Name(" NS "_%" SV_FMT
+            "    T " NS "_%" SP_FMT "_accept_##Name(" NS "_%" SP_FMT
             "_t* node, Ns##_##Name##_t* visitor) { \\\n",
-            SV_PRN(tree_name), SV_PRN(tree_name));
+            SP_PRN(tree_name), SP_PRN(tree_name));
     fprintf(output, "        switch (node->type) { \\\n");
     for (size_t i = 0; i < nodes.size; ++i) {
-        fprintf(output, "            case " NS "_%" SV_FMT "_type_%" SV_FMT ": \\\n",
-                SV_PRN(tree_name), SV_PRN(nodes.data[i].name));
+        fprintf(output, "            case " NS "_%" SP_FMT "_type_%" SP_FMT ": \\\n",
+                SP_PRN(tree_name), SP_PRN(nodes.data[i].name));
         fprintf(output,
-                "                return " NS "_%" SV_FMT "_%" SV_FMT "_accept_##Name((" NS
-                "_%" SV_FMT "_%" SV_FMT
+                "                return " NS "_%" SP_FMT "_%" SP_FMT "_accept_##Name((" NS
+                "_%" SP_FMT "_%" SP_FMT
                 "_t*)node, "
                 "visitor); \\\n",
-                SV_PRN(nodes.data[i].name), SV_PRN(tree_name), SV_PRN(nodes.data[i].name),
-                SV_PRN(tree_name));
+                SP_PRN(nodes.data[i].name), SP_PRN(tree_name), SP_PRN(nodes.data[i].name),
+                SP_PRN(tree_name));
     }
     fprintf(output, "        } \\\n");
     fprintf(output, "        return (T){0}; \\\n");
     fprintf(output, "    } \\\n");
     for (size_t i = 0; i < nodes.size; ++i) {
         fprintf(output,
-                "    T " NS "_%" SV_FMT "_%" SV_FMT "_accept_##Name(" NS "_%" SV_FMT "_%" SV_FMT
+                "    T " NS "_%" SP_FMT "_%" SP_FMT "_accept_##Name(" NS "_%" SP_FMT "_%" SP_FMT
                 "_t* self, Ns##_##Name##_t* visitor) { \\\n",
-                SV_PRN(nodes.data[i].name), SV_PRN(tree_name), SV_PRN(nodes.data[i].name),
-                SV_PRN(tree_name));
-        fprintf(output, "        return Name##_visit_%" SV_FMT "_%" SV_FMT "(visitor, self); \\\n",
-                SV_PRN(nodes.data[i].name), SV_PRN(tree_name));
+                SP_PRN(nodes.data[i].name), SP_PRN(tree_name), SP_PRN(nodes.data[i].name),
+                SP_PRN(tree_name));
+        fprintf(output, "        return Name##_visit_%" SP_FMT "_%" SP_FMT "(visitor, self); \\\n",
+                SP_PRN(nodes.data[i].name), SP_PRN(tree_name));
         if (i < nodes.size - 1) {
             fprintf(output, "    } \\\n");
         } else {
@@ -428,16 +445,16 @@ static void dump_toplevel_source_macro(phyto_string_view_t tree_name, nodes_t no
     phyto_string_free(&tree_name_upper);
 }
 
-static void print_constructor_signature(phyto_string_view_t tree_name, node_t* node, FILE* output) {
+static void print_constructor_signature(phyto_string_span_t tree_name, node_t* node, FILE* output) {
     print_derived_type_name(tree_name, node->name, output);
-    fprintf(output, "* " NS "_%" SV_FMT "_new_%" SV_FMT "(", SV_PRN(tree_name), SV_PRN(node->name));
+    fprintf(output, "* " NS "_%" SP_FMT "_new_%" SP_FMT "(", SP_PRN(tree_name), SP_PRN(node->name));
     for (size_t j = 0; j < node->fields.size; ++j) {
         phyto_string_t field_type =
-            phyto_string_view_equal(phyto_string_view(node->fields.data[j].type), tree_name)
-                ? phyto_string_from_sprintf(NS "_%" SV_FMT "_t*", SV_PRN(tree_name))
+            phyto_string_span_equal(phyto_string_as_span(node->fields.data[j].type), tree_name)
+                ? phyto_string_from_sprintf(NS "_%" SP_FMT "_t*", SP_PRN(tree_name))
                 : phyto_string_copy(node->fields.data[j].type);
-        fprintf(output, "%" STR_FMT " %" SV_FMT, STR_PRN(field_type),
-                SV_PRN(node->fields.data[j].name));
+        fprintf(output, "%" STR_FMT " %" SP_FMT, STR_PRN(field_type),
+                SP_PRN(node->fields.data[j].name));
         phyto_string_free(&field_type);
         if (j < node->fields.size - 1) {
             fprintf(output, ", ");
@@ -446,13 +463,13 @@ static void print_constructor_signature(phyto_string_view_t tree_name, node_t* n
     fprintf(output, ")");
 }
 
-static void print_free_fn_signature(phyto_string_view_t tree_name, FILE* output) {
-    fprintf(output, "void " NS "_%" SV_FMT "_free(", SV_PRN(tree_name));
+static void print_free_fn_signature(phyto_string_span_t tree_name, FILE* output) {
+    fprintf(output, "void " NS "_%" SP_FMT "_free(", SP_PRN(tree_name));
     print_base_class_name(tree_name, output);
     fprintf(output, "* node)");
 }
 
-static void dump_source_file_decls(phyto_string_view_t tree_name, nodes_t nodes, FILE* output) {
+static void dump_source_file_decls(phyto_string_span_t tree_name, nodes_t nodes, FILE* output) {
     print_free_fn_signature(tree_name, output);
     fprintf(output, ";\n");
     for (size_t i = 0; i < nodes.size; ++i) {
@@ -461,7 +478,7 @@ static void dump_source_file_decls(phyto_string_view_t tree_name, nodes_t nodes,
     }
 }
 
-static void dump_static_free_functions(phyto_string_view_t tree_name, nodes_t nodes, FILE* output) {
+static void dump_static_free_functions(phyto_string_span_t tree_name, nodes_t nodes, FILE* output) {
     for (size_t i = 0; i < nodes.size; ++i) {
         node_t* node = &nodes.data[i];
         fprintf(output, "static void free_");
@@ -472,40 +489,40 @@ static void dump_static_free_functions(phyto_string_view_t tree_name, nodes_t no
         fprintf(output, "    if (node == NULL) {\n        return;\n    }\n");
         for (size_t j = 0; j < node->fields.size; ++j) {
             field_t* field = &node->fields.data[j];
-            bool recursive = phyto_string_view_equal(phyto_string_view(field->type), tree_name);
+            bool recursive = phyto_string_span_equal(phyto_string_as_span(field->type), tree_name);
             phyto_string_t field_type =
-                recursive ? phyto_string_from_sprintf(NS "_%" SV_FMT "_t*", SV_PRN(tree_name))
+                recursive ? phyto_string_from_sprintf(NS "_%" SP_FMT "_t*", SP_PRN(tree_name))
                           : phyto_string_copy(field->type);
-            bool field_type_is_pointer = phyto_string_ends_with(phyto_string_view(field_type),
-                                                                phyto_string_view_from_c("*"));
-            bool field_type_is_const = phyto_string_starts_with(phyto_string_view(field_type),
-                                                                phyto_string_view_from_c("const "));
+            bool field_type_is_pointer = phyto_string_ends_with(phyto_string_as_span(field_type),
+                                                                phyto_string_span_from_c("*"));
+            bool field_type_is_const = phyto_string_starts_with(phyto_string_as_span(field_type),
+                                                                phyto_string_span_from_c("const "));
             if (field_type_is_pointer) {
                 if (!field_type_is_const) {
                     if (recursive) {
                         fprintf(output, "    ");
-                        fprintf(output, "if (node->%" SV_FMT " != NULL) {\n", SV_PRN(field->name));
+                        fprintf(output, "if (node->%" SP_FMT " != NULL) {\n", SP_PRN(field->name));
                         fprintf(output, "        ");
-                        fprintf(output, NS "_%" SV_FMT "_free(node->%" SV_FMT ");\n",
-                                SV_PRN(tree_name), SV_PRN(field->name));
+                        fprintf(output, NS "_%" SP_FMT "_free(node->%" SP_FMT ");\n",
+                                SP_PRN(tree_name), SP_PRN(field->name));
                         fprintf(output, "    }\n");
                     } else {
                         phyto_string_t field_type_name = phyto_string_remove_suffix(
-                            phyto_string_view(field_type), phyto_string_view_from_c("_t*"));
+                            phyto_string_as_span(field_type), phyto_string_span_from_c("_t*"));
                         fprintf(output, "    ");
-                        fprintf(output, "if (node->%" SV_FMT " != NULL) {\n", SV_PRN(field->name));
+                        fprintf(output, "if (node->%" SP_FMT " != NULL) {\n", SP_PRN(field->name));
                         fprintf(output, "        ");
-                        fprintf(output, "%" STR_FMT "_free(node->%" SV_FMT ");\n",
-                                STR_PRN(field_type_name), SV_PRN(field->name));
+                        fprintf(output, "%" STR_FMT "_free(node->%" SP_FMT ");\n",
+                                STR_PRN(field_type_name), SP_PRN(field->name));
                         phyto_string_free(&field_type_name);
                     }
                 }
             } else {
                 phyto_string_t field_type_name = phyto_string_remove_suffix(
-                    phyto_string_view(field_type), phyto_string_view_from_c("_t"));
+                    phyto_string_as_span(field_type), phyto_string_span_from_c("_t"));
                 fprintf(output, "    ");
-                fprintf(output, "%" STR_FMT "_free(&node->%" SV_FMT ");\n",
-                        STR_PRN(field_type_name), SV_PRN(field->name));
+                fprintf(output, "%" STR_FMT "_free(&node->%" SP_FMT ");\n",
+                        STR_PRN(field_type_name), SP_PRN(field->name));
                 phyto_string_free(&field_type_name);
             }
             phyto_string_free(&field_type);
@@ -514,19 +531,19 @@ static void dump_static_free_functions(phyto_string_view_t tree_name, nodes_t no
     }
 }
 
-static void dump_constructors(phyto_string_view_t tree_name, nodes_t nodes, FILE* output) {
+static void dump_constructors(phyto_string_span_t tree_name, nodes_t nodes, FILE* output) {
     for (size_t i = 0; i < nodes.size; ++i) {
         node_t* node = &nodes.data[i];
         print_derived_type_name(tree_name, node->name, output);
-        fprintf(output, "* " NS "_%" SV_FMT "_new_%" SV_FMT, SV_PRN(tree_name), SV_PRN(node->name));
+        fprintf(output, "* " NS "_%" SP_FMT "_new_%" SP_FMT, SP_PRN(tree_name), SP_PRN(node->name));
         fprintf(output, "(");
         for (size_t j = 0; j < node->fields.size; ++j) {
             field_t* field = &node->fields.data[j];
             phyto_string_t field_type =
-                phyto_string_view_equal(phyto_string_view(field->type), tree_name)
-                    ? phyto_string_from_sprintf(NS "_%" SV_FMT "_t*", SV_PRN(tree_name))
+                phyto_string_span_equal(phyto_string_as_span(field->type), tree_name)
+                    ? phyto_string_from_sprintf(NS "_%" SP_FMT "_t*", SP_PRN(tree_name))
                     : phyto_string_copy(field->type);
-            fprintf(output, "%" STR_FMT " %" SV_FMT, STR_PRN(field_type), SV_PRN(field->name));
+            fprintf(output, "%" STR_FMT " %" SP_FMT, STR_PRN(field_type), SP_PRN(field->name));
             phyto_string_free(&field_type);
             if (j < node->fields.size - 1) {
                 fprintf(output, ", ");
@@ -538,19 +555,19 @@ static void dump_constructors(phyto_string_view_t tree_name, nodes_t nodes, FILE
         fprintf(output, "* node = calloc(1, sizeof(");
         print_derived_type_name(tree_name, node->name, output);
         fprintf(output, "));\n");
-        fprintf(output, "    node->base.type = " NS "_%" SV_FMT "_type_%" SV_FMT ";\n",
-                SV_PRN(tree_name), SV_PRN(node->name));
+        fprintf(output, "    node->base.type = " NS "_%" SP_FMT "_type_%" SP_FMT ";\n",
+                SP_PRN(tree_name), SP_PRN(node->name));
         for (size_t j = 0; j < node->fields.size; ++j) {
             field_t* field = &node->fields.data[j];
-            fprintf(output, "    node->%" SV_FMT " = %" SV_FMT ";\n", SV_PRN(field->name),
-                    SV_PRN(field->name));
+            fprintf(output, "    node->%" SP_FMT " = %" SP_FMT ";\n", SP_PRN(field->name),
+                    SP_PRN(field->name));
         }
         fprintf(output, "    return node;\n");
         fprintf(output, "}\n");
     }
 }
 
-static void dump_source_file(phyto_string_view_t tree_name,
+static void dump_source_file(phyto_string_span_t tree_name,
                              nodes_t nodes,
                              const char* output_path,
                              FILE* output) {
@@ -564,12 +581,12 @@ static void dump_source_file(phyto_string_view_t tree_name,
     fprintf(output, "    switch (node->type) {\n");
     for (size_t i = 0; i < nodes.size; ++i) {
         node_t* node = &nodes.data[i];
-        fprintf(output, "        case " NS "_%" SV_FMT "_type_%" SV_FMT ":\n", SV_PRN(tree_name),
-                SV_PRN(node->name));
+        fprintf(output, "        case " NS "_%" SP_FMT "_type_%" SP_FMT ":\n", SP_PRN(tree_name),
+                SP_PRN(node->name));
         fprintf(output,
-                "            free_%" SV_FMT "_%" SV_FMT "((" NS "_%" SV_FMT "_%" SV_FMT
+                "            free_%" SP_FMT "_%" SP_FMT "((" NS "_%" SP_FMT "_%" SP_FMT
                 "_t*)node);\n",
-                SV_PRN(node->name), SV_PRN(tree_name), SV_PRN(node->name), SV_PRN(tree_name));
+                SP_PRN(node->name), SP_PRN(tree_name), SP_PRN(node->name), SP_PRN(tree_name));
         fprintf(output, "            break;\n");
     }
     fprintf(output, "    }\n");
@@ -589,14 +606,13 @@ static void parse_def(parser_t* p,
         fprintf(stderr, "expected ident after def\n");
         return;
     }
-    phyto_string_view_t tree_name = SSV(ident->text);
+    phyto_string_span_t tree_name = SSP(ident->text);
     ++p->pos;
 
     fprintf(header_output, "#ifndef " NS_UPPER "_AST_H_\n");
     fprintf(header_output, "#define " NS_UPPER "_AST_H_\n");
 
-    nodes_t nodes;
-    PHYTO_VEC_INIT(&nodes);
+    nodes_t nodes = nodes_init(&nodes_callbacks);
     while (current(p)->type != ttype_end) {
         fprintf(stderr, "%s\n", ttype_names[current(p)->type]);
         stmt_t stmt = parse_stmt(p);
@@ -607,11 +623,11 @@ static void parse_def(parser_t* p,
         if (stmt.type == stype_includes) {
             for (size_t i = 0; i < stmt.includes.size; ++i) {
                 // includes always come first
-                fprintf(header_output, "#include <%" SV_FMT ">\n", SV_PRN(stmt.includes.data[i]));
+                fprintf(header_output, "#include <%" SP_FMT ">\n", SP_PRN(stmt.includes.data[i]));
             }
-            SVIEWS_FREE(&stmt.includes);
+            sspans_free(&stmt.includes);
         } else {
-            PHYTO_VEC_PUSH(&nodes, stmt.node);
+            nodes_append(&nodes, stmt.node);
         }
     }
     // consume 'end'
@@ -629,12 +645,8 @@ static void parse_def(parser_t* p,
     dump_source_file(tree_name, nodes, header_path, source_output);
 
     // free
-    for (size_t i = 0; i < nodes.size; ++i) {
-        fields_free(&nodes.data[i].fields);
-        phyto_string_free(&visitor_func_macros.data[i].signature);
-    }
-    PHYTO_VEC_FREE(&visitor_func_macros);
-    PHYTO_VEC_FREE(&nodes);
+    visitor_func_macros_free(&visitor_func_macros);
+    nodes_free(&nodes);
 }
 
 static void parse_file(const toks_t* toks,
@@ -669,14 +681,13 @@ int main(int argc, char** argv) {
         return 1;
     }
     kwmap_t* kwmap = kwmap_new(20, phyto_hash_default_load, &kwmap_key_ops, &kwmap_value_ops);
-    kwmap_insert(kwmap, SV("def"), ttype_def);
-    kwmap_insert(kwmap, SV("includes"), ttype_includes);
-    kwmap_insert(kwmap, SV("end"), ttype_end);
+    kwmap_insert(kwmap, SP("def"), ttype_def);
+    kwmap_insert(kwmap, SP("includes"), ttype_includes);
+    kwmap_insert(kwmap, SP("end"), ttype_end);
 
-    toks_t toks;
-    TOKS_INIT(&toks);
+    toks_t toks = toks_init(&toks_callbacks);
 
-    lex_file(&toks, kwmap, phyto_string_view(input));
+    lex_file(&toks, kwmap, phyto_string_as_span(input));
 
     if (toks.size == 0) {
         fprintf(stderr, "Failed to lex input file: %s (no tokens)\n", argv[1]);
@@ -688,7 +699,7 @@ int main(int argc, char** argv) {
     for (size_t i = 0; i < toks.size; ++i) {
         phyto_string_free(&toks.data[i].text);
     }
-    TOKS_FREE(&toks);
+    toks_free(&toks);
 
     kwmap_free(kwmap);
     fclose(source_output);

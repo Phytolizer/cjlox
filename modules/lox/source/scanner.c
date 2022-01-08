@@ -1,15 +1,20 @@
 #include "lox/scanner.h"
 
+#include <nonstd/ctype.h>
 #include <stdbool.h>
 #include <stdlib.h>
 
 #include "lox/lox.h"
 #include "lox/object.h"
+#include "lox/token.h"
 #include "lox/token_type.h"
-#include "nonstd/ctype.h"
-#include "phyto/string_view/string_view.h"
+#include "phyto/string/string.h"
 
 PHYTO_HASH_IMPL(lox_scanner_keyword_map, lox_token_type_t);
+
+static const lox_token_vec_callbacks_t lox_token_vec_callbacks = {
+    .free_cb = lox_token_free,
+};
 
 static const lox_scanner_keyword_map_key_ops_t key_ops = {
     .hash = phyto_hash_djb2,
@@ -58,9 +63,9 @@ static bool match(lox_scanner_t* scanner, char expected) {
 
 static void add_token_literal(lox_scanner_t* scanner, lox_token_type_t type, lox_object_t literal) {
     lox_token_t token = lox_token_new(
-        type, phyto_string_view_substr(scanner->source, scanner->start, scanner->current), literal,
+        type, phyto_string_span_subspan(scanner->source, scanner->start, scanner->current), literal,
         scanner->line);
-    PHYTO_VEC_PUSH(&scanner->tokens, token);
+    lox_token_vec_append(&scanner->tokens, token);
 }
 
 static void add_token(lox_scanner_t* scanner, lox_token_type_t type) {
@@ -76,13 +81,13 @@ static void string(lox_scanner_t* scanner) {
     }
 
     if (is_at_end(scanner)) {
-        lox_error(scanner->ctx, scanner->line, phyto_string_view_from_c("Unterminated string."));
+        lox_error(scanner->ctx, scanner->line, phyto_string_span_from_c("Unterminated string."));
         return;
     }
 
     advance(scanner);
     phyto_string_t value = phyto_string_own(
-        phyto_string_view_substr(scanner->source, scanner->start + 1, scanner->current - 1));
+        phyto_string_span_subspan(scanner->source, scanner->start + 1, scanner->current - 1));
     add_token_literal(scanner, lox_token_type_string, lox_object_new_string(value));
 }
 
@@ -108,8 +113,8 @@ static void identifier(lox_scanner_t* scanner) {
         advance(scanner);
     }
 
-    phyto_string_view_t value =
-        phyto_string_view_substr(scanner->source, scanner->start, scanner->current);
+    phyto_string_span_t value =
+        phyto_string_span_subspan(scanner->source, scanner->start, scanner->current);
     lox_token_type_t* type = lox_scanner_keyword_map_get_ref(scanner->keywords, value);
     if (type != NULL) {
         add_token(scanner, *type);
@@ -193,13 +198,13 @@ static void scan_token(lox_scanner_t* scanner) {
                 identifier(scanner);
             } else {
                 lox_error(scanner->ctx, scanner->line,
-                          phyto_string_view_from_c("Unexpected character."));
+                          phyto_string_span_from_c("Unexpected character."));
             }
             break;
     }
 }
 
-lox_scanner_t lox_scanner_new(lox_context_t* ctx, phyto_string_view_t source) {
+lox_scanner_t lox_scanner_new(lox_context_t* ctx, phyto_string_span_t source) {
     lox_scanner_t scanner = {
         .ctx = ctx,
         .source = source,
@@ -209,39 +214,39 @@ lox_scanner_t lox_scanner_new(lox_context_t* ctx, phyto_string_view_t source) {
         .line = 1,
         .keywords = lox_scanner_keyword_map_new(20, phyto_hash_default_load, &key_ops, &value_ops),
     };
-    lox_scanner_keyword_map_insert(scanner.keywords, phyto_string_view_from_c("and"),
+    lox_scanner_keyword_map_insert(scanner.keywords, phyto_string_span_from_c("and"),
                                    lox_token_type_kw_and);
-    lox_scanner_keyword_map_insert(scanner.keywords, phyto_string_view_from_c("class"),
+    lox_scanner_keyword_map_insert(scanner.keywords, phyto_string_span_from_c("class"),
                                    lox_token_type_kw_class);
-    lox_scanner_keyword_map_insert(scanner.keywords, phyto_string_view_from_c("else"),
+    lox_scanner_keyword_map_insert(scanner.keywords, phyto_string_span_from_c("else"),
                                    lox_token_type_kw_else);
-    lox_scanner_keyword_map_insert(scanner.keywords, phyto_string_view_from_c("false"),
+    lox_scanner_keyword_map_insert(scanner.keywords, phyto_string_span_from_c("false"),
                                    lox_token_type_kw_false);
-    lox_scanner_keyword_map_insert(scanner.keywords, phyto_string_view_from_c("for"),
+    lox_scanner_keyword_map_insert(scanner.keywords, phyto_string_span_from_c("for"),
                                    lox_token_type_kw_for);
-    lox_scanner_keyword_map_insert(scanner.keywords, phyto_string_view_from_c("fun"),
+    lox_scanner_keyword_map_insert(scanner.keywords, phyto_string_span_from_c("fun"),
                                    lox_token_type_kw_fun);
-    lox_scanner_keyword_map_insert(scanner.keywords, phyto_string_view_from_c("if"),
+    lox_scanner_keyword_map_insert(scanner.keywords, phyto_string_span_from_c("if"),
                                    lox_token_type_kw_if);
-    lox_scanner_keyword_map_insert(scanner.keywords, phyto_string_view_from_c("nil"),
+    lox_scanner_keyword_map_insert(scanner.keywords, phyto_string_span_from_c("nil"),
                                    lox_token_type_kw_nil);
-    lox_scanner_keyword_map_insert(scanner.keywords, phyto_string_view_from_c("or"),
+    lox_scanner_keyword_map_insert(scanner.keywords, phyto_string_span_from_c("or"),
                                    lox_token_type_kw_or);
-    lox_scanner_keyword_map_insert(scanner.keywords, phyto_string_view_from_c("print"),
+    lox_scanner_keyword_map_insert(scanner.keywords, phyto_string_span_from_c("print"),
                                    lox_token_type_kw_print);
-    lox_scanner_keyword_map_insert(scanner.keywords, phyto_string_view_from_c("return"),
+    lox_scanner_keyword_map_insert(scanner.keywords, phyto_string_span_from_c("return"),
                                    lox_token_type_kw_return);
-    lox_scanner_keyword_map_insert(scanner.keywords, phyto_string_view_from_c("super"),
+    lox_scanner_keyword_map_insert(scanner.keywords, phyto_string_span_from_c("super"),
                                    lox_token_type_kw_super);
-    lox_scanner_keyword_map_insert(scanner.keywords, phyto_string_view_from_c("this"),
+    lox_scanner_keyword_map_insert(scanner.keywords, phyto_string_span_from_c("this"),
                                    lox_token_type_kw_this);
-    lox_scanner_keyword_map_insert(scanner.keywords, phyto_string_view_from_c("true"),
+    lox_scanner_keyword_map_insert(scanner.keywords, phyto_string_span_from_c("true"),
                                    lox_token_type_kw_true);
-    lox_scanner_keyword_map_insert(scanner.keywords, phyto_string_view_from_c("var"),
+    lox_scanner_keyword_map_insert(scanner.keywords, phyto_string_span_from_c("var"),
                                    lox_token_type_kw_var);
-    lox_scanner_keyword_map_insert(scanner.keywords, phyto_string_view_from_c("while"),
+    lox_scanner_keyword_map_insert(scanner.keywords, phyto_string_span_from_c("while"),
                                    lox_token_type_kw_while);
-    PHYTO_VEC_INIT(&scanner.tokens);
+    scanner.tokens = lox_token_vec_init(&lox_token_vec_callbacks);
     return scanner;
 }
 
@@ -251,16 +256,14 @@ lox_token_vec_t lox_scanner_scan_tokens(lox_scanner_t* scanner) {
         scan_token(scanner);
     }
 
-    PHYTO_VEC_PUSH(&scanner->tokens, lox_token_new(lox_token_type_eof, phyto_string_view_empty(),
-                                                   lox_object_new_nil(), scanner->line));
+    lox_token_vec_append(&scanner->tokens,
+                         lox_token_new(lox_token_type_eof, phyto_string_span_empty(),
+                                       lox_object_new_nil(), scanner->line));
     return scanner->tokens;
 }
 
 void lox_scanner_free(lox_scanner_t* scanner) {
-    for (size_t i = 0; i < scanner->tokens.size; i++) {
-        lox_token_free(&scanner->tokens.data[i]);
-    }
-    PHYTO_VEC_FREE(&scanner->tokens);
+    lox_token_vec_free(&scanner->tokens);
     lox_scanner_keyword_map_free(scanner->keywords);
     scanner->keywords = NULL;
 }

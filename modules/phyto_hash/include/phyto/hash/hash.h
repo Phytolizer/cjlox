@@ -2,7 +2,6 @@
 #define PHYTO_HASH_HASH_H_
 
 #include <phyto/string/string.h>
-#include <phyto/string_view/string_view.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -24,14 +23,14 @@ typedef enum {
 #undef X
 } phyto_hash_flag_t;
 
-phyto_string_view_t phyto_hash_flag_explain(phyto_hash_flag_t flag);
+phyto_string_span_t phyto_hash_flag_explain(phyto_hash_flag_t flag);
 
 typedef PHYTO_SPAN_TYPE(uint64_t) phyto_hash_prime_span_t;
 
 phyto_hash_prime_span_t phyto_hash_prime_span(void);
 
-uint64_t phyto_hash_fnv1a(phyto_string_view_t s);
-uint64_t phyto_hash_djb2(phyto_string_view_t s);
+uint64_t phyto_hash_fnv1a(phyto_string_span_t s);
+uint64_t phyto_hash_djb2(phyto_string_span_t s);
 extern const double phyto_hash_default_load;
 
 #define PHYTO_HASH_DECL(Name, V)                                                               \
@@ -46,7 +45,7 @@ extern const double phyto_hash_default_load;
         Name##_entry_state_t state;                                                            \
     } Name##_entry_t;                                                                          \
     typedef struct {                                                                           \
-        uint64_t (*hash)(phyto_string_view_t);                                                 \
+        uint64_t (*hash)(phyto_string_span_t);                                                 \
     } Name##_key_ops_t;                                                                        \
     typedef struct {                                                                           \
         int32_t (*compare)(V, V);                                                              \
@@ -68,14 +67,14 @@ extern const double phyto_hash_default_load;
                          const Name##_value_ops_t* value_ops);                                 \
     void Name##_clear(Name##_t* map);                                                          \
     void Name##_free(Name##_t* map);                                                           \
-    bool Name##_insert(Name##_t* map, phyto_string_view_t key, V value);                       \
-    bool Name##_update(Name##_t* map, phyto_string_view_t key, V new_value, V* out_old_value); \
-    bool Name##_remove(Name##_t* map, phyto_string_view_t key, V* out_value);                  \
+    bool Name##_insert(Name##_t* map, phyto_string_span_t key, V value);                       \
+    bool Name##_update(Name##_t* map, phyto_string_span_t key, V new_value, V* out_old_value); \
+    bool Name##_remove(Name##_t* map, phyto_string_span_t key, V* out_value);                  \
     bool Name##_max(Name##_t* map, phyto_string_t* out_key, V* out_value);                     \
     bool Name##_min(Name##_t* map, phyto_string_t* out_key, V* out_value);                     \
-    V Name##_get(Name##_t* map, phyto_string_view_t key);                                      \
-    V* Name##_get_ref(Name##_t* map, phyto_string_view_t key);                                 \
-    bool Name##_contains(Name##_t* map, phyto_string_view_t key);                              \
+    V Name##_get(Name##_t* map, phyto_string_span_t key);                                      \
+    V* Name##_get_ref(Name##_t* map, phyto_string_span_t key);                                 \
+    bool Name##_contains(Name##_t* map, phyto_string_span_t key);                              \
     bool Name##_empty(Name##_t* map);                                                          \
     bool Name##_full(Name##_t* map);                                                           \
     size_t Name##_count(Name##_t* map);                                                        \
@@ -87,7 +86,7 @@ extern const double phyto_hash_default_load;
     bool Name##_equals(Name##_t* map, Name##_t* other)
 
 #define PHYTO_HASH_IMPL(Name, V)                                                                \
-    static Name##_entry_t* Name##_impl_get_entry(Name##_t* map, phyto_string_view_t key);       \
+    static Name##_entry_t* Name##_impl_get_entry(Name##_t* map, phyto_string_span_t key);       \
     static size_t Name##_impl_calculate_size(size_t required);                                  \
     Name##_t* Name##_new(size_t capacity, double load, const Name##_key_ops_t* key_ops,         \
                          const Name##_value_ops_t* value_ops) {                                 \
@@ -145,7 +144,7 @@ extern const double phyto_hash_default_load;
         free(map->buffer);                                                                      \
         free(map);                                                                              \
     }                                                                                           \
-    bool Name##_insert(Name##_t* map, phyto_string_view_t key, V value) {                       \
+    bool Name##_insert(Name##_t* map, phyto_string_span_t key, V value) {                       \
         if (Name##_full(map)) {                                                                 \
             if (!Name##_resize(map, map->capacity + 1)) {                                       \
                 return false;                                                                   \
@@ -182,7 +181,7 @@ extern const double phyto_hash_default_load;
         map->flag = phyto_hash_flag_ok;                                                         \
         return true;                                                                            \
     }                                                                                           \
-    bool Name##_update(Name##_t* map, phyto_string_view_t key, V new_value, V* out_old_value) { \
+    bool Name##_update(Name##_t* map, phyto_string_span_t key, V new_value, V* out_old_value) { \
         if (Name##_empty(map)) {                                                                \
             map->flag = phyto_hash_flag_empty;                                                  \
             return false;                                                                       \
@@ -199,7 +198,7 @@ extern const double phyto_hash_default_load;
         map->flag = phyto_hash_flag_ok;                                                         \
         return true;                                                                            \
     }                                                                                           \
-    bool Name##_remove(Name##_t* map, phyto_string_view_t key, V* out_value) {                  \
+    bool Name##_remove(Name##_t* map, phyto_string_span_t key, V* out_value) {                  \
         if (Name##_empty(map)) {                                                                \
             map->flag = phyto_hash_flag_empty;                                                  \
             return false;                                                                       \
@@ -234,8 +233,8 @@ extern const double phyto_hash_default_load;
                     first = false;                                                              \
                     max_key = entry->key;                                                       \
                     max_value = entry->value;                                                   \
-                } else if (phyto_string_compare(phyto_string_view(entry->key),                  \
-                                                phyto_string_view(max_key)) > 0) {              \
+                } else if (phyto_string_compare(phyto_string_as_span(entry->key),               \
+                                                phyto_string_as_span(max_key)) > 0) {           \
                     max_key = entry->key;                                                       \
                     max_value = entry->value;                                                   \
                 }                                                                               \
@@ -265,8 +264,8 @@ extern const double phyto_hash_default_load;
                     first = false;                                                              \
                     min_key = entry->key;                                                       \
                     min_value = entry->value;                                                   \
-                } else if (phyto_string_compare(phyto_string_view(entry->key),                  \
-                                                phyto_string_view(min_key)) < 0) {              \
+                } else if (phyto_string_compare(phyto_string_as_span(entry->key),               \
+                                                phyto_string_as_span(min_key)) < 0) {           \
                     min_key = entry->key;                                                       \
                     min_value = entry->value;                                                   \
                 }                                                                               \
@@ -281,7 +280,7 @@ extern const double phyto_hash_default_load;
         map->flag = phyto_hash_flag_ok;                                                         \
         return true;                                                                            \
     }                                                                                           \
-    V Name##_get(Name##_t* map, phyto_string_view_t key) {                                      \
+    V Name##_get(Name##_t* map, phyto_string_span_t key) {                                      \
         if (Name##_empty(map)) {                                                                \
             map->flag = phyto_hash_flag_empty;                                                  \
             return (V){0};                                                                      \
@@ -294,7 +293,7 @@ extern const double phyto_hash_default_load;
         map->flag = phyto_hash_flag_ok;                                                         \
         return entry->value;                                                                    \
     }                                                                                           \
-    V* Name##_get_ref(Name##_t* map, phyto_string_view_t key) {                                 \
+    V* Name##_get_ref(Name##_t* map, phyto_string_span_t key) {                                 \
         if (Name##_empty(map)) {                                                                \
             map->flag = phyto_hash_flag_empty;                                                  \
             return NULL;                                                                        \
@@ -307,7 +306,7 @@ extern const double phyto_hash_default_load;
         map->flag = phyto_hash_flag_ok;                                                         \
         return &entry->value;                                                                   \
     }                                                                                           \
-    bool Name##_contains(Name##_t* map, phyto_string_view_t key) {                              \
+    bool Name##_contains(Name##_t* map, phyto_string_span_t key) {                              \
         map->flag = phyto_hash_flag_ok;                                                         \
         return Name##_impl_get_entry(map, key) != NULL;                                         \
     }                                                                                           \
@@ -343,7 +342,7 @@ extern const double phyto_hash_default_load;
         }                                                                                       \
         for (size_t i = 0; i < map->capacity; ++i) {                                            \
             if (map->buffer[i].state == Name##_entry_state_filled) {                            \
-                phyto_string_view_t key = phyto_string_view(map->buffer[i].key);                \
+                phyto_string_span_t key = phyto_string_as_span(map->buffer[i].key);             \
                 V value = map->buffer[i].value;                                                 \
                 if (!Name##_insert(new_map, key, value)) {                                      \
                     map->flag = new_map->flag;                                                  \
@@ -406,7 +405,7 @@ extern const double phyto_hash_default_load;
             if (map_a->buffer[i].state == Name##_entry_state_filled) {                          \
                 Name##_entry_t* entry_a = &map_a->buffer[i];                                    \
                 Name##_entry_t* entry_b =                                                       \
-                    Name##_impl_get_entry(map_b, phyto_string_view(entry_a->key));              \
+                    Name##_impl_get_entry(map_b, phyto_string_as_span(entry_a->key));           \
                 if (!entry_b) {                                                                 \
                     return false;                                                               \
                 }                                                                               \
@@ -417,13 +416,13 @@ extern const double phyto_hash_default_load;
         }                                                                                       \
         return true;                                                                            \
     }                                                                                           \
-    static Name##_entry_t* Name##_impl_get_entry(Name##_t* map, phyto_string_view_t key) {      \
+    static Name##_entry_t* Name##_impl_get_entry(Name##_t* map, phyto_string_span_t key) {      \
         size_t hash = map->key_ops->hash(key);                                                  \
         size_t pos = hash % map->capacity;                                                      \
         Name##_entry_t* target = &map->buffer[pos];                                             \
         while (target->state == Name##_entry_state_filled ||                                    \
                target->state == Name##_entry_state_deleted) {                                   \
-            if (phyto_string_view_equal(key, phyto_string_view(target->key))) {                 \
+            if (phyto_string_span_equal(key, phyto_string_as_span(target->key))) {              \
                 return target;                                                                  \
             }                                                                                   \
             pos++;                                                                              \
@@ -465,7 +464,7 @@ extern const double phyto_hash_default_load;
     bool Name##_iter_advance(Name##_iter_t* iter, size_t steps); \
     bool Name##_iter_rewind(Name##_iter_t* iter, size_t steps);  \
     bool Name##_iter_go_to(Name##_iter_t* iter, size_t index);   \
-    phyto_string_view_t Name##_iter_key(Name##_iter_t* iter);    \
+    phyto_string_span_t Name##_iter_key(Name##_iter_t* iter);    \
     V Name##_iter_value(Name##_iter_t* iter);                    \
     V* Name##_iter_value_ref(Name##_iter_t* iter);               \
     size_t Name##_iter_index(Name##_iter_t* iter)
@@ -636,11 +635,11 @@ extern const double phyto_hash_default_load;
         }                                                                       \
         return true;                                                            \
     }                                                                           \
-    phyto_string_view_t Name##_iter_key(Name##_iter_t* iter) {                  \
+    phyto_string_span_t Name##_iter_key(Name##_iter_t* iter) {                  \
         if (Name##_empty(iter->target)) {                                       \
-            return phyto_string_view_empty();                                   \
+            return phyto_string_span_empty();                                   \
         }                                                                       \
-        return phyto_string_view(iter->target->buffer[iter->cursor].key);       \
+        return phyto_string_as_span(iter->target->buffer[iter->cursor].key);    \
     }                                                                           \
     V Name##_iter_value(Name##_iter_t* iter) {                                  \
         if (Name##_empty(iter->target)) {                                       \
@@ -658,9 +657,9 @@ extern const double phyto_hash_default_load;
 
 #define PHYTO_HASH_DECL_STR(Name, V)                                          \
     bool Name##_to_string(Name##_t* map, FILE* fp);                           \
-    bool Name##_print(Name##_t* map, FILE* fp, phyto_string_view_t start,     \
-                      phyto_string_view_t separator, phyto_string_view_t end, \
-                      phyto_string_view_t key_value_separator)
+    bool Name##_print(Name##_t* map, FILE* fp, phyto_string_span_t start,     \
+                      phyto_string_span_t separator, phyto_string_span_t end, \
+                      phyto_string_span_t key_value_separator)
 
 #define PHYTO_HASH_IMPL_STR(Name, V)                                                           \
     bool Name##_to_string(Name##_t* map, FILE* fp) {                                           \
@@ -682,9 +681,9 @@ extern const double phyto_hash_default_load;
                             PHYTO_STRING_VIEW_PRINTF_ARGS(phyto_hash_flag_explain(map->flag)), \
                             map->key_ops, map->value_ops);                                     \
     }                                                                                          \
-    bool Name##_print(Name##_t* map, FILE* fp, phyto_string_view_t start,                      \
-                      phyto_string_view_t separator, phyto_string_view_t end,                  \
-                      phyto_string_view_t key_value_separator) {                               \
+    bool Name##_print(Name##_t* map, FILE* fp, phyto_string_span_t start,                      \
+                      phyto_string_span_t separator, phyto_string_span_t end,                  \
+                      phyto_string_span_t key_value_separator) {                               \
         fprintf(fp, "%" PHYTO_STRING_FORMAT, PHYTO_STRING_VIEW_PRINTF_ARGS(start));            \
         size_t last = 0;                                                                       \
         for (size_t i = map->capacity; i > 0; --i) {                                           \
@@ -696,7 +695,7 @@ extern const double phyto_hash_default_load;
         for (size_t i = 0; i < map->capacity; ++i) {                                           \
             Name##_entry_t* entry = &map->buffer[i];                                           \
             if (entry->state == Name##_entry_state_filled) {                                   \
-                phyto_string_view_print_to(phyto_string_view(entry->key), fp);                 \
+                phyto_string_span_print_to(phyto_string_as_span(entry->key), fp);              \
                 fprintf(fp, "%" PHYTO_STRING_FORMAT,                                           \
                         PHYTO_STRING_VIEW_PRINTF_ARGS(key_value_separator));                   \
                 if (!map->value_ops->print(fp, entry->value)) {                                \

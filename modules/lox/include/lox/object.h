@@ -2,7 +2,6 @@
 #define LOX_OBJECT_H_
 
 #include <phyto/string/string.h>
-#include <phyto/string_view/string_view.h>
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -29,7 +28,7 @@ typedef struct {
     };
 } lox_object_t;
 
-phyto_string_view_t lox_object_type_name(lox_object_type_t type);
+phyto_string_span_t lox_object_type_name(lox_object_type_t type);
 
 lox_object_t lox_object_new_nil(void);
 lox_object_t lox_object_new_integer(int64_t value);

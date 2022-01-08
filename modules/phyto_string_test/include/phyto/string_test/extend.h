@@ -3,6 +3,6 @@
 
 #include <phyto/test/test.h>
 
-PHYTO_TEST_SUITE_FUNC(append_view);
+PHYTO_TEST_SUITE_FUNC(extend);
 
 #endif  // PHYTO_STRING_TEST_APPEND_VIEW_H_

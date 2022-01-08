@@ -57,8 +57,8 @@ static phyto_string_t stringify_double_object(lox_object_t obj) {
     return phyto_string_from_sprintf("%g", obj.double_value);
 }
 
-phyto_string_view_t lox_object_type_name(lox_object_type_t type) {
-    return phyto_string_view_from_c(object_type_names[type]);
+phyto_string_span_t lox_object_type_name(lox_object_type_t type) {
+    return phyto_string_span_from_c(object_type_names[type]);
 }
 
 lox_object_t lox_object_new_nil(void) {

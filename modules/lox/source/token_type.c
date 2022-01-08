@@ -12,13 +12,13 @@ const lox_token_type_t lox_token_types[] = {
 #undef X
 };
 
-phyto_string_view_t lox_token_type_name(lox_token_type_t type) {
-    return phyto_string_view_from_c(token_type_names[type]);
+phyto_string_span_t lox_token_type_name(lox_token_type_t type) {
+    return phyto_string_span_from_c(token_type_names[type]);
 }
 
 bool lox_token_type_print_to(FILE* fp, lox_token_type_t type) {
-    phyto_string_view_t name = lox_token_type_name(type);
-    phyto_string_view_print_to(name, fp);
+    phyto_string_span_t name = lox_token_type_name(type);
+    phyto_string_span_print_to(name, fp);
     return true;
 }
 

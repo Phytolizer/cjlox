@@ -16,15 +16,15 @@ LOX_EXPR_VISITOR_VISIT_BINARY_FUNC(lox, ast_printer, phyto_string_t) {
     phyto_string_t right = lox_expr_accept_ast_printer(node->right, visitor);
     phyto_string_t result = phyto_string_new();
     phyto_string_reserve(&result, left.size + right.size + node->op.lexeme.size + 4);
-    phyto_string_push(&result, '(');
-    phyto_string_append_view(&result, phyto_string_view(node->op.lexeme));
-    phyto_string_push(&result, ' ');
-    phyto_string_append_view(&result, phyto_string_view(left));
+    phyto_string_append(&result, '(');
+    phyto_string_extend(&result, phyto_string_as_span(node->op.lexeme));
+    phyto_string_append(&result, ' ');
+    phyto_string_extend(&result, phyto_string_as_span(left));
     phyto_string_free(&left);
-    phyto_string_push(&result, ' ');
-    phyto_string_append_view(&result, phyto_string_view(right));
+    phyto_string_append(&result, ' ');
+    phyto_string_extend(&result, phyto_string_as_span(right));
     phyto_string_free(&right);
-    phyto_string_push(&result, ')');
+    phyto_string_append(&result, ')');
     return result;
 }
 
@@ -33,9 +33,9 @@ LOX_EXPR_VISITOR_VISIT_GROUPING_FUNC(lox, ast_printer, phyto_string_t) {
     phyto_string_t result = phyto_string_new();
     phyto_string_reserve(&result, expr.size + 8);
     phyto_string_append_c(&result, "(group ");
-    phyto_string_append_view(&result, phyto_string_view(expr));
+    phyto_string_extend(&result, phyto_string_as_span(expr));
     phyto_string_free(&expr);
-    phyto_string_push(&result, ')');
+    phyto_string_append(&result, ')');
     return result;
 }
 
@@ -48,11 +48,11 @@ LOX_EXPR_VISITOR_VISIT_UNARY_FUNC(lox, ast_printer, phyto_string_t) {
     phyto_string_t expr = lox_expr_accept_ast_printer(node->right, visitor);
     phyto_string_t result = phyto_string_new();
     phyto_string_reserve(&result, expr.size + node->op.lexeme.size + 4);
-    phyto_string_push(&result, '(');
-    phyto_string_append_view(&result, phyto_string_view(node->op.lexeme));
-    phyto_string_push(&result, ' ');
-    phyto_string_append_view(&result, phyto_string_view(expr));
+    phyto_string_append(&result, '(');
+    phyto_string_extend(&result, phyto_string_as_span(node->op.lexeme));
+    phyto_string_append(&result, ' ');
+    phyto_string_extend(&result, phyto_string_as_span(expr));
     phyto_string_free(&expr);
-    phyto_string_push(&result, ')');
+    phyto_string_append(&result, ')');
     return result;
 }
