@@ -14,6 +14,7 @@ PHYTO_HASH_IMPL(lox_scanner_keyword_map, lox_token_type_t);
 
 static const lox_token_vec_callbacks_t lox_token_vec_callbacks = {
     .free_cb = lox_token_free,
+    .print_cb = lox_token_print,
 };
 
 static const lox_scanner_keyword_map_key_ops_t key_ops = {

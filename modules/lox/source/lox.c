@@ -52,10 +52,8 @@ void run(lox_context_t* ctx, phyto_string_span_t source) {
     lox_scanner_t scanner = lox_scanner_new(ctx, source);
     lox_token_vec_t tokens = lox_scanner_scan_tokens(&scanner);
 
-    for (size_t i = 0; i < tokens.size; ++i) {
-        lox_token_print(tokens.data[i]);
-        printf("\n");
-    }
+    lox_token_vec_print(tokens, stdout, "\n");
+    printf("\n");
     lox_scanner_free(&scanner);
 }
 
