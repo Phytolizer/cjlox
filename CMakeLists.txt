@@ -48,6 +48,7 @@ function(declare_module NAME)
         -Wall
         -Wextra
         -Werror=implicit-function-declaration
+        -Werror=incompatible-pointer-types
         -Werror=return-type
         -Werror=unused-function
         -Werror=unused-parameter
@@ -143,7 +144,7 @@ declare_module(
     phyto_hash_test
     KIND executable
     SOURCES main.c
-    DEPENDS phyto_hash phyto_test
+    DEPENDS phyto_hash phyto_test pcre2-8
 )
 
 declare_module(

@@ -50,7 +50,7 @@ extern const double phyto_hash_default_load;
     typedef struct {                                                                           \
         int32_t (*compare)(V, V);                                                              \
         V (*copy)(V);                                                                          \
-        bool (*print)(FILE*, V);                                                               \
+        void (*print)(FILE*, V);                                                               \
         void (*free)(V);                                                                       \
         uint64_t (*hash)(V);                                                                   \
     } Name##_value_ops_t;                                                                      \
@@ -655,60 +655,72 @@ extern const double phyto_hash_default_load;
     }                                                                           \
     size_t Name##_iter_index(Name##_iter_t* iter) { return iter->index; }
 
-#define PHYTO_HASH_DECL_STR(Name, V)                                          \
-    bool Name##_to_string(Name##_t* map, FILE* fp);                           \
-    bool Name##_print(Name##_t* map, FILE* fp, phyto_string_span_t start,     \
-                      phyto_string_span_t separator, phyto_string_span_t end, \
+#define PHYTO_HASH_DECL_STR(Name, V)                                                        \
+    void Name##_string(Name##_t* map, void (*cb)(const char* str, size_t len, void* state), \
+                       void* state);                                                        \
+    void Name##_print(Name##_t* map, FILE* fp, phyto_string_span_t start,                   \
+                      phyto_string_span_t separator, phyto_string_span_t end,               \
                       phyto_string_span_t key_value_separator)
 
-#define PHYTO_HASH_IMPL_STR(Name, V)                                                           \
-    bool Name##_to_string(Name##_t* map, FILE* fp) {                                           \
-        return 0 <= fprintf(fp,                                                                \
-                            "struct %s<%s, %s> "                                               \
-                            "at %p { "                                                         \
-                            "buffer:%p, "                                                      \
-                            "capacity:%" PRIuMAX                                               \
-                            ", "                                                               \
-                            "count:%" PRIuMAX                                                  \
-                            ", "                                                               \
-                            "load:%lf, "                                                       \
-                            "flag:%" PHYTO_STRING_FORMAT                                       \
-                            ", "                                                               \
-                            "key_ops:%p, "                                                     \
-                            "value_ops:%p }",                                                  \
-                            #Name, "phyto_string_t", #V, map, map->buffer, map->capacity,      \
-                            map->count, map->load,                                             \
-                            PHYTO_STRING_VIEW_PRINTF_ARGS(phyto_hash_flag_explain(map->flag)), \
-                            map->key_ops, map->value_ops);                                     \
-    }                                                                                          \
-    bool Name##_print(Name##_t* map, FILE* fp, phyto_string_span_t start,                      \
-                      phyto_string_span_t separator, phyto_string_span_t end,                  \
-                      phyto_string_span_t key_value_separator) {                               \
-        fprintf(fp, "%" PHYTO_STRING_FORMAT, PHYTO_STRING_VIEW_PRINTF_ARGS(start));            \
-        size_t last = 0;                                                                       \
-        for (size_t i = map->capacity; i > 0; --i) {                                           \
-            if (map->buffer[i - 1].state == Name##_entry_state_filled) {                       \
-                last = i - 1;                                                                  \
-                break;                                                                         \
-            }                                                                                  \
-        }                                                                                      \
-        for (size_t i = 0; i < map->capacity; ++i) {                                           \
-            Name##_entry_t* entry = &map->buffer[i];                                           \
-            if (entry->state == Name##_entry_state_filled) {                                   \
-                phyto_string_span_print_to(phyto_string_as_span(entry->key), fp);              \
-                fprintf(fp, "%" PHYTO_STRING_FORMAT,                                           \
-                        PHYTO_STRING_VIEW_PRINTF_ARGS(key_value_separator));                   \
-                if (!map->value_ops->print(fp, entry->value)) {                                \
-                    return false;                                                              \
-                }                                                                              \
-                if (i < last) {                                                                \
-                    fprintf(fp, "%" PHYTO_STRING_FORMAT,                                       \
-                            PHYTO_STRING_VIEW_PRINTF_ARGS(separator));                         \
-                }                                                                              \
-            }                                                                                  \
-        }                                                                                      \
-        fprintf(fp, "%" PHYTO_STRING_FORMAT, PHYTO_STRING_VIEW_PRINTF_ARGS(end));              \
-        return true;                                                                           \
+#define PHYTO_HASH_IMPL_STR(Name, V)                                                        \
+    void Name##_string(Name##_t* map, void (*cb)(const char* str, size_t len, void* state), \
+                       void* state) {                                                       \
+        char buf[32];                                                                       \
+        cb(#Name, sizeof(#Name) - 1, state);                                                \
+        cb("_t<phyto_string_t", 17, state);                                                 \
+        cb(", ", 2, state);                                                                 \
+        cb(#V, sizeof(#V) - 1, state);                                                      \
+        cb("> at ", 5, state);                                                              \
+        snprintf(buf, sizeof(buf), "%p", map);                                              \
+        cb(buf, strlen(buf), state);                                                        \
+        cb(" { buffer:", 10, state);                                                        \
+        snprintf(buf, sizeof(buf), "%p", map->buffer);                                      \
+        cb(buf, strlen(buf), state);                                                        \
+        cb(", capacity:", 11, state);                                                       \
+        snprintf(buf, sizeof(buf), "%" PRIuMAX, (uintmax_t)map->capacity);                  \
+        cb(buf, strlen(buf), state);                                                        \
+        cb(", count:", 8, state);                                                           \
+        snprintf(buf, sizeof(buf), "%" PRIuMAX, (uintmax_t)map->count);                     \
+        cb(buf, strlen(buf), state);                                                        \
+        cb(", load:", 7, state);                                                            \
+        snprintf(buf, sizeof(buf), "%lf", map->load);                                       \
+        cb(buf, strlen(buf), state);                                                        \
+        cb(", flag:", 7, state);                                                            \
+        phyto_string_span_t flag = phyto_hash_flag_explain(map->flag);                      \
+        cb(flag.begin, flag.size, state);                                                   \
+        cb(", key_ops:", 10, state);                                                        \
+        snprintf(buf, sizeof(buf), "%p", map->key_ops);                                     \
+        cb(buf, strlen(buf), state);                                                        \
+        cb(", value_ops:", 12, state);                                                      \
+        snprintf(buf, sizeof(buf), "%p", map->value_ops);                                   \
+        cb(buf, strlen(buf), state);                                                        \
+        cb(" }", 2, state);                                                                 \
+    }                                                                                       \
+    void Name##_print(Name##_t* map, FILE* fp, phyto_string_span_t start,                   \
+                      phyto_string_span_t separator, phyto_string_span_t end,               \
+                      phyto_string_span_t key_value_separator) {                            \
+        fprintf(fp, "%" PHYTO_STRING_FORMAT, PHYTO_STRING_VIEW_PRINTF_ARGS(start));         \
+        size_t last = 0;                                                                    \
+        for (size_t i = map->capacity; i > 0; --i) {                                        \
+            if (map->buffer[i - 1].state == Name##_entry_state_filled) {                    \
+                last = i - 1;                                                               \
+                break;                                                                      \
+            }                                                                               \
+        }                                                                                   \
+        for (size_t i = 0; i < map->capacity; ++i) {                                        \
+            Name##_entry_t* entry = &map->buffer[i];                                        \
+            if (entry->state == Name##_entry_state_filled) {                                \
+                phyto_string_span_print_to(phyto_string_as_span(entry->key), fp);           \
+                fprintf(fp, "%" PHYTO_STRING_FORMAT,                                        \
+                        PHYTO_STRING_VIEW_PRINTF_ARGS(key_value_separator));                \
+                map->value_ops->print(fp, entry->value);                                    \
+                if (i < last) {                                                             \
+                    fprintf(fp, "%" PHYTO_STRING_FORMAT,                                    \
+                            PHYTO_STRING_VIEW_PRINTF_ARGS(separator));                      \
+                }                                                                           \
+            }                                                                               \
+        }                                                                                   \
+        fprintf(fp, "%" PHYTO_STRING_FORMAT, PHYTO_STRING_VIEW_PRINTF_ARGS(end));           \
     }
 
 #endif  // PHYTO_HASH_HASH_H_

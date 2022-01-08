@@ -1,7 +1,11 @@
 #include <ansi_esc/ansi_esc.h>
 #include <inttypes.h>
 #include <phyto/hash/hash.h>
+#include <phyto/string/string.h>
 #include <phyto/test/test.h>
+#include <stdint.h>
+
+#include "phyto_hash_test/pcre.h"
 
 PHYTO_HASH_DECL(int_map, int);
 PHYTO_HASH_IMPL(int_map, int);
@@ -35,9 +39,8 @@ static uint64_t int_fnv1a(int a) {
     return phyto_hash_fnv1a(phyto_string_span_from_array((char*)&a, sizeof(a)));
 }
 
-static bool intprint(FILE* fp, int a) {
+static void intprint(FILE* fp, int a) {
     fprintf(fp, "%d", a);
-    return true;
 }
 
 static const int_map_key_ops_t default_key_ops = {
@@ -368,12 +371,46 @@ PHYTO_TEST_SUITE_FUNC(iteration) {
     PHYTO_TEST_RUN(go_to);
 }
 
+static void string_cb(const char* str, size_t len, void* data) {
+    phyto_string_t* s = (phyto_string_t*)data;
+    phyto_string_extend(s, phyto_string_span_from_array(str, len));
+}
+
 PHYTO_TEST_FUNC(to_string) {
     int_map_t* map = int_map_new(10, phyto_hash_default_load, &default_key_ops, &default_value_ops);
     PHYTO_TEST_ASSERT(map != NULL, (void)0, "int_map_new() failed");
     PHYTO_TEST_RUN_SUBTEST(insert_alphabet, int_map_free(map), map);
 
-    int_map_to_string(map, stdout);
+    phyto_string_t result = phyto_string_new();
+    int_map_string(map, string_cb, &result);
+    int error_code;
+    size_t error_offset;
+    pcre2_code* regex_code = pcre2_compile(
+        (PCRE2_SPTR) "int_map_t<phyto_string_t, int> at 0x[0-9a-fA-F]+ { buffer:0x[0-9a-fA-F]+, capacity:53, count:26, load:0\\.[0-9]+, flag:ok, key_ops:0x[0-9a-fA-F]+, value_ops:0x[0-9a-fA-F]+ }",
+        PCRE2_ZERO_TERMINATED, 0, &error_code, &error_offset, 0);
+    PHYTO_TEST_ASSERT(
+        regex_code != NULL,
+        do {
+            int_map_free(map);
+            phyto_string_free(&result);
+        } while (false),
+        "pcre2_compile() failed");
+    pcre2_match_data* match_data = pcre2_match_data_create_from_pattern(regex_code, NULL);
+    int ret = pcre2_match(regex_code, (PCRE2_SPTR)result.data, result.size, 0, 0, match_data, NULL);
+    PHYTO_TEST_ASSERT(
+        ret >= 0,
+        do {
+            int_map_free(map);
+            phyto_string_free(&result);
+            pcre2_match_data_free(match_data);
+            pcre2_code_free(regex_code);
+        } while (false),
+        "int_map_string() did not match the expected output");
+    pcre2_match_data_free(match_data);
+    pcre2_code_free(regex_code);
+    phyto_string_print_nosep(result, stdout);
+    printf("\n");
+    phyto_string_free(&result);
     printf("\n");
     int_map_print(map, stdout, phyto_string_span_from_c("==int_map_print==\n"),
                   phyto_string_span_from_c("\n"),
