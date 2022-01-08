@@ -4,8 +4,8 @@
 #include <nonstd/qsort.h>
 #include <phyto/span/span.h>
 #include <stddef.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "phyto/collections/callbacks.h"
 
@@ -179,6 +179,9 @@
         return Name##_insert(self, self->size, value);                                             \
     }                                                                                              \
     bool Name##_extend(Name##_t* self, Name##_span_t span) {                                       \
+        if (span.size == 0) {                                                                      \
+            return true;                                                                           \
+        }                                                                                          \
         if (!Name##_resize(self, self->size + span.size)) {                                        \
             return false;                                                                          \
         }                                                                                          \
