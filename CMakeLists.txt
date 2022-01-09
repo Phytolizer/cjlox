@@ -105,6 +105,14 @@ declare_module(
     KIND interface
     DEPENDS ansi_esc nonstd
 )
+
+declare_module(
+    phyto_deque_test
+    KIND executable
+    SOURCES main.c
+    DEPENDS phyto_collections phyto_test
+)
+
 declare_module(
     phyto_vec_test
     KIND executable
@@ -196,6 +204,7 @@ declare_module(
 
 if(PROJECT_IS_TOP_LEVEL)
     enable_testing()
+    add_test(NAME phyto_deque_test COMMAND phyto_deque_test)
     add_test(NAME phyto_vec_test COMMAND phyto_vec_test)
     add_test(NAME phyto_string_test COMMAND phyto_string_test)
     add_test(NAME phyto_hash_test COMMAND phyto_hash_test)
