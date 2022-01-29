@@ -12,5 +12,9 @@ typedef struct {
 int32_t lox_run_file(lox_context_t* ctx, const char* filename);
 void lox_run_prompt(lox_context_t* ctx);
 void lox_error(lox_context_t* ctx, uint64_t line, phyto_string_span_t message);
+void lox_report(lox_context_t* ctx,
+                       uint64_t line,
+                       phyto_string_span_t where,
+                       phyto_string_span_t message);
 
 #endif  // LOX_LOX_H_

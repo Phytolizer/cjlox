@@ -16,10 +16,10 @@ phyto_string_t phyto_io_read_file(const char* path) {
     return result;
 }
 
-phyto_string_t phyto_io_read_line(FILE* fp) {
+phyto_string_t phyto_io_read_line(FILE* stream) {
     phyto_string_t result = phyto_string_new();
     char buffer[1024];
-    while (fgets(buffer, sizeof(buffer), fp)) {
+    while (fgets(buffer, sizeof(buffer), stream)) {
         phyto_string_append_c(&result, buffer);
         if (result.data[result.size - 1] == '\n') {
             break;

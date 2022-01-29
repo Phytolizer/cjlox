@@ -6,6 +6,6 @@
 #include <stdio.h>
 
 phyto_string_t phyto_io_read_file(const char* path);
-phyto_string_t phyto_io_read_line(FILE* fp);
+phyto_string_t phyto_io_read_line(FILE* stream);
 
 #endif  // PHYTO_IO_IO_H_

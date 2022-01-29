@@ -50,7 +50,6 @@ function(declare_module NAME)
         -Werror=implicit-function-declaration
         -Werror=incompatible-pointer-types
         -Werror=return-type
-        -Werror=unused-function
         -Werror=unused-parameter
         -Werror=unused-variable
         -fsanitize=address,undefined
@@ -184,7 +183,13 @@ add_custom_command(
 declare_module(
     lox
     KIND library
-    SOURCES ast_printer.c lox.c object.c scanner.c token_type.c token.c
+    SOURCES ast_printer.c
+            lox.c
+            object.c
+            parser.c
+            scanner.c
+            token_type.c
+            token.c
     DEPENDS sysexits phyto_io phyto_string phyto_hash
     INCLUDES "${PROJECT_BINARY_DIR}/build_include"
     ABSOLUTE_SOURCES "${PROJECT_BINARY_DIR}/lox_ast.c"
