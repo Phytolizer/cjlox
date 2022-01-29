@@ -9,60 +9,60 @@
 
 #include "phyto/collections/callbacks.h"
 
-#define PHYTO_COLLECTIONS_DYNAMIC_ARRAY_DECL(Name, DataType)                                 \
-    typedef enum {                                                                           \
-        Name##_error_flag_ok,                                                                \
-        Name##_error_flag_out_of_memory,                                                     \
-        Name##_error_flag_out_of_bounds,                                                     \
-        Name##_error_flag_not_found,                                                         \
-        Name##_error_flag_invalid_argument,                                                  \
-    } Name##_error_flag_t;                                                                   \
-                                                                                             \
-    const char* Name##_explain_error(Name##_error_flag_t error_flag);                        \
-                                                                                             \
-    typedef struct {                                                                         \
-        PHYTO_COLLECTIONS_FREE_CB(DataType);                                                 \
-        PHYTO_COLLECTIONS_COPY_CB(DataType);                                                 \
-        PHYTO_COLLECTIONS_COMPARE_CB(DataType);                                              \
-        PHYTO_COLLECTIONS_PRINT_CB(DataType);                                                \
-    } Name##_callbacks_t;                                                                    \
-    typedef PHYTO_SPAN_TYPE(DataType) Name##_span_t;                                         \
-                                                                                             \
-    Name##_span_t Name##_span_new(const DataType* begin, const DataType* end);               \
-    Name##_span_t Name##_span_empty(void);                                                   \
-    Name##_span_t Name##_span_from_array(const DataType* array, size_t size);                \
-    Name##_span_t Name##_span_subspan(Name##_span_t span, size_t begin, size_t end);         \
-                                                                                             \
-    typedef struct {                                                                         \
-        DataType* data;                                                                      \
-        size_t size;                                                                         \
-        size_t capacity;                                                                     \
-        const Name##_callbacks_t* callbacks;                                                 \
-        Name##_error_flag_t error_flag;                                                      \
-    } Name##_t;                                                                              \
-                                                                                             \
-    Name##_t Name##_init(const Name##_callbacks_t* callbacks);                               \
-    Name##_t Name##_init_from_span(const Name##_callbacks_t* callbacks, Name##_span_t span); \
-    void Name##_free(Name##_t* self);                                                        \
-    bool Name##_reserve(Name##_t* self, size_t new_capacity);                                \
-    bool Name##_resize(Name##_t* self, size_t new_size);                                     \
-    bool Name##_insert(Name##_t* self, size_t index, DataType value);                        \
-    bool Name##_append(Name##_t* self, DataType value);                                      \
-    bool Name##_extend(Name##_t* self, Name##_span_t span);                                  \
-    bool Name##_remove(Name##_t* self, DataType value);                                      \
-    bool Name##_remove_at(Name##_t* self, size_t index);                                     \
-    size_t Name##_index(Name##_t* self, DataType value);                                     \
-    bool Name##_contains(Name##_t self, DataType value);                                     \
-    size_t Name##_count(Name##_t self, DataType value);                                      \
-    void Name##_clear(Name##_t* self);                                                       \
-    void Name##_sort(Name##_t* self);                                                        \
-    void Name##_reverse(Name##_t* self);                                                     \
-    Name##_t Name##_copy(Name##_t self);                                                     \
-    void Name##_string(Name##_t self, void (*cb)(const char* data, size_t len, void* state), \
-                       void* state);                                                         \
-    void Name##_print(Name##_t self, FILE* fp, const char* sep);                             \
-    bool Name##_equals(Name##_t self, Name##_t other);                                       \
-    Name##_span_t Name##_range(Name##_t* self, size_t begin, size_t end);                    \
+#define PHYTO_COLLECTIONS_DYNAMIC_ARRAY_DECL(Name, DataType)                                       \
+    typedef enum {                                                                                 \
+        Name##_error_flag_ok,                                                                      \
+        Name##_error_flag_out_of_memory,                                                           \
+        Name##_error_flag_out_of_bounds,                                                           \
+        Name##_error_flag_not_found,                                                               \
+        Name##_error_flag_invalid_argument,                                                        \
+    } Name##_error_flag_t;                                                                         \
+                                                                                                   \
+    const char* Name##_explain_error(Name##_error_flag_t error_flag);                              \
+                                                                                                   \
+    typedef struct {                                                                               \
+        PHYTO_COLLECTIONS_FREE_CB(DataType);                                                       \
+        PHYTO_COLLECTIONS_COPY_CB(DataType);                                                       \
+        PHYTO_COLLECTIONS_COMPARE_CB(DataType);                                                    \
+        PHYTO_COLLECTIONS_PRINT_CB(DataType);                                                      \
+    } Name##_callbacks_t;                                                                          \
+    typedef PHYTO_SPAN_TYPE(DataType) Name##_span_t;                                               \
+                                                                                                   \
+    Name##_span_t Name##_span_new(const DataType* begin, const DataType* end);                     \
+    Name##_span_t Name##_span_empty(void);                                                         \
+    Name##_span_t Name##_span_from_array(const DataType* array, size_t size);                      \
+    Name##_span_t Name##_span_subspan(Name##_span_t span, size_t begin, size_t end);               \
+                                                                                                   \
+    typedef struct {                                                                               \
+        DataType* data;                                                                            \
+        size_t size;                                                                               \
+        size_t capacity;                                                                           \
+        const Name##_callbacks_t* callbacks;                                                       \
+        Name##_error_flag_t error_flag;                                                            \
+    } Name##_t;                                                                                    \
+                                                                                                   \
+    Name##_t Name##_init(const Name##_callbacks_t* callbacks);                                     \
+    Name##_t Name##_init_from_span(const Name##_callbacks_t* callbacks, Name##_span_t span);       \
+    void Name##_free(Name##_t* self);                                                              \
+    bool Name##_reserve(Name##_t* self, size_t new_capacity);                                      \
+    bool Name##_resize(Name##_t* self, size_t new_size);                                           \
+    bool Name##_insert(Name##_t* self, size_t index, DataType value);                              \
+    bool Name##_append(Name##_t* self, DataType value);                                            \
+    bool Name##_extend(Name##_t* self, Name##_span_t span);                                        \
+    bool Name##_remove(Name##_t* self, DataType value);                                            \
+    bool Name##_remove_at(Name##_t* self, size_t index);                                           \
+    size_t Name##_index(Name##_t* self, DataType value);                                           \
+    bool Name##_contains(Name##_t self, DataType value);                                           \
+    size_t Name##_count(Name##_t self, DataType value);                                            \
+    void Name##_clear(Name##_t* self);                                                             \
+    void Name##_sort(Name##_t* self);                                                              \
+    void Name##_reverse(Name##_t* self);                                                           \
+    Name##_t Name##_copy(Name##_t self);                                                           \
+    void Name##_string(Name##_t self, void (*callback)(const char* data, size_t len, void* state), \
+                       void* state);                                                               \
+    void Name##_print(Name##_t self, FILE* file, const char* sep);                                 \
+    bool Name##_equals(Name##_t self, Name##_t other);                                             \
+    Name##_span_t Name##_range(Name##_t* self, size_t begin, size_t end);                          \
     Name##_span_t Name##_as_span(Name##_t self);
 
 #define PHYTO_COLLECTIONS_DYNAMIC_ARRAY_IMPL(Name, DataType)                                       \
@@ -243,11 +243,11 @@
         }                                                                                          \
         self->size = 0;                                                                            \
     }                                                                                              \
-    static int Name##_compare_values(const void* a, const void* b, void* state) {                  \
+    static int Name##_compare_values(const void* first, const void* second, void* state) {         \
         Name##_t* self = state;                                                                    \
-        DataType ac = *(DataType*)a;                                                               \
-        DataType bc = *(DataType*)b;                                                               \
-        return self->callbacks->compare_cb(ac, bc);                                                \
+        DataType first_data = *(DataType*)first;                                                   \
+        DataType second_data = *(DataType*)second;                                                 \
+        return self->callbacks->compare_cb(first_data, second_data);                               \
     }                                                                                              \
     void Name##_sort(Name##_t* self) {                                                             \
         if (self->size > 1) {                                                                      \
@@ -266,26 +266,26 @@
     Name##_t Name##_copy(Name##_t self) {                                                          \
         return Name##_init_from_span(self.callbacks, Name##_as_span(self));                        \
     }                                                                                              \
-    void Name##_string(Name##_t self, void (*cb)(const char* data, size_t len, void* state),       \
+    void Name##_string(Name##_t self, void (*callback)(const char* data, size_t len, void* state), \
                        void* state) {                                                              \
-        cb(#Name, sizeof(#Name) - 1, state);                                                       \
-        cb("<size:", 6, state);                                                                    \
+        callback(#Name, sizeof(#Name) - 1, state);                                                 \
+        callback("<size:", 6, state);                                                              \
         char buf[32];                                                                              \
         int len = snprintf(buf, sizeof(buf), "%zu", self.size);                                    \
-        cb(buf, len, state);                                                                       \
-        cb(",capacity:", 10, state);                                                               \
+        callback(buf, len, state);                                                                 \
+        callback(",capacity:", 10, state);                                                         \
         len = snprintf(buf, sizeof(buf), "%zu", self.capacity);                                    \
-        cb(buf, len, state);                                                                       \
-        cb(",data:", 6, state);                                                                    \
+        callback(buf, len, state);                                                                 \
+        callback(",data:", 6, state);                                                              \
         len = snprintf(buf, sizeof(buf), "%p", self.data);                                         \
-        cb(buf, len, state);                                                                       \
-        cb(">", 1, state);                                                                         \
+        callback(buf, len, state);                                                                 \
+        callback(">", 1, state);                                                                   \
     }                                                                                              \
-    void Name##_print(Name##_t self, FILE* fp, const char* sep) {                                  \
+    void Name##_print(Name##_t self, FILE* file, const char* sep) {                                \
         for (size_t i = 0; i < self.size; ++i) {                                                   \
-            self.callbacks->print_cb(self.data[i], fp);                                            \
+            self.callbacks->print_cb(self.data[i], file);                                          \
             if (i < self.size - 1) {                                                               \
-                fprintf(fp, "%s", sep);                                                            \
+                fprintf(file, "%s", sep);                                                          \
             }                                                                                      \
         }                                                                                          \
     }                                                                                              \
