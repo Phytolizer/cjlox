@@ -1,9 +1,0 @@
-{
-  "[cmake]": {
-    "editor.tabSize": 4
-  },
-  "[c]": {
-    "editor.tabSize": 4,
-    "editor.detectIndentation": false
-  }
-}
