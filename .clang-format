@@ -5,3 +5,5 @@ ContinuationIndentWidth: 8
 IncludeBlocks: Regroup
 ColumnLimit: 100
 AllowShortFunctionsOnASingleLine: Empty
+AlignOperands: DontAlign
+AlignAfterOpenBracket: false
