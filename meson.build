@@ -7,4 +7,6 @@ project(
 
 subdir('span')
 subdir('string')
+subdir('args')
+subdir('lox')
 subdir('cjlox')
