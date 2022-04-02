@@ -5,4 +5,6 @@ project(
     default_options : ['c_std=c11', 'warning_level=3']
 )
 
+subdir('span')
+subdir('string')
 subdir('cjlox')

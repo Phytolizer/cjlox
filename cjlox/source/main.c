@@ -1,5 +1,7 @@
 #include <stdio.h>
+#include <string/string.h>
 
 int main(void) {
-    puts("hello world");
+    string_t hello = STRING_C("hello world");
+    string_print(hello, stdout);
 }
