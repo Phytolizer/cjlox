@@ -1,7 +1,0 @@
-def expr
-    includes [ lox/object.h lox/token.h ]
-    binary { left: expr, op: lox_token_t, right: expr }
-    grouping { expression: expr }
-    unary { op: lox_token_t, right: expr }
-    literal { value: lox_object_t }
-end
