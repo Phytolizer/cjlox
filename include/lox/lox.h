@@ -1,6 +1,7 @@
 #pragma once
 
 typedef struct {
+  int _nothing;
 } Lox;
 
 void lox_init(Lox* lox);

@@ -11,6 +11,10 @@
         "CMAKE_CXX_COMPILER": "cl.exe",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
       },
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
       "condition": {
         "type": "equals",
         "lhs": "${hostSystemName}",
@@ -60,7 +64,10 @@
     {
       "name": "x64-debug-linux",
       "displayName": "x64 Debug (Linux)",
-      "inherits": ["linux-base", "vcpkg-base"],
+      "inherits": [
+        "linux-base",
+        "vcpkg-base"
+      ],
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug"
       }

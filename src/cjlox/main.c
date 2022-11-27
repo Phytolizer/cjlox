@@ -1,6 +1,6 @@
 #include <lox/lox.h>
 #include <stdio.h>
-#include <sysexits.h>
+#include <sysexits/sysexits.h>
 
 int main(int argc, char** argv) {
   Lox lox;
