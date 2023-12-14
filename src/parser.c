@@ -212,8 +212,8 @@ static Stmt *declaration(Parser *parser)
         if (result.stmt == NULL)
         {
             synchronize(parser);
-            return NULL;
         }
+        return result.stmt;
     }
     StmtResult result = statement(parser);
     if (result.stmt == NULL)
@@ -366,6 +366,11 @@ static ExprResult primary(Parser *parser)
     if (match(parser, TOKEN_NUMBER, TOKEN_STRING))
     {
         return ok(new_literal_expr(previous(parser).literal));
+    }
+
+    if (match(parser, TOKEN_IDENTIFIER))
+    {
+        return ok(new_variable_expr(previous(parser)));
     }
 
     if (match(parser, TOKEN_LEFT_PAREN))

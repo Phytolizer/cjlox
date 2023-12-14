@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.28)
+cmake_minimum_required(VERSION 3.27)
 
 project(cjlox LANGUAGES C)
 
@@ -24,6 +24,7 @@ add_custom_command(
 
 add_executable(lox
     src/ast_printer.c
+    src/environment.c
     src/interpreter.c
     src/object.c
     src/parser.c

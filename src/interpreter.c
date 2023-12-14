@@ -212,6 +212,21 @@ static void *visit_unary_expr(ExprVisitor *visitor, void *data, UnaryExpr *expr)
     }
 }
 
+static void *visit_variable_expr(ExprVisitor *visitor, void *data, VariableExpr *expr)
+{
+    Interpreter *interpreter = data;
+    GetResult gotten = environment_get(&interpreter->environment, expr->name);
+    if (gotten.err_msg != NULL)
+    {
+        RuntimeResult *result = malloc(sizeof(RuntimeResult));
+        result->was_error = true;
+        result->token = gotten.token;
+        result->message = gotten.err_msg;
+        return result;
+    }
+    return ok(gotten.value);
+}
+
 static void *visit_print_stmt(StmtVisitor *visitor, void *data, PrintStmt *stmt)
 {
     Interpreter *interpreter = data;
@@ -228,6 +243,18 @@ static void *visit_expression_stmt(StmtVisitor *visitor, void *data, ExpressionS
     return ok(NULL);
 }
 
+static void *visit_var_stmt(StmtVisitor *visitor, void *data, VarStmt *stmt)
+{
+    Interpreter *interpreter = data;
+    Object *value = NULL;
+    if (stmt->initializer != NULL)
+    {
+        value = evaluate(interpreter, stmt->initializer);
+    }
+    environment_define(&interpreter->environment, stmt->name.lexeme, value);
+    return ok(NULL);
+}
+
 Interpreter new_interpreter(void)
 {
     Interpreter interpreter = {
@@ -237,13 +264,16 @@ Interpreter new_interpreter(void)
                 .visit_grouping_expr = visit_grouping_expr,
                 .visit_literal_expr = visit_literal_expr,
                 .visit_unary_expr = visit_unary_expr,
+                .visit_variable_expr = visit_variable_expr,
             },
         .stmt =
             {
                 .visit_print_stmt = visit_print_stmt,
                 .visit_expression_stmt = visit_expression_stmt,
+                .visit_var_stmt = visit_var_stmt,
             },
         .init = true,
+        .environment = new_environment(),
     };
     return interpreter;
 }
