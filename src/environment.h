@@ -16,13 +16,14 @@ typedef struct Environment
     EnvironmentEntry *values;
 } Environment;
 
-typedef struct GetResult
+typedef struct EnvironmentResult
 {
     Token token;
     sds err_msg;
     Object *value;
-} GetResult;
+} EnvironmentResult;
 
 Environment new_environment(void);
 void environment_define(Environment *environment, sds name, Object *value);
-GetResult environment_get(Environment *environment, Token name);
+EnvironmentResult environment_get(Environment *environment, Token name);
+EnvironmentResult environment_assign(Environment *environment, Token name, Object *value);

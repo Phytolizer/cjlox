@@ -38,6 +38,7 @@ static StmtResult print_statement(Parser *parser);
 static StmtResult expression_statement(Parser *parser);
 
 static ExprResult expression(Parser *parser);
+static ExprResult assignment(Parser *parser);
 static ExprResult equality(Parser *parser);
 static ExprResult comparison(Parser *parser);
 static ExprResult term(Parser *parser);
@@ -281,7 +282,29 @@ static StmtResult expression_statement(Parser *parser)
 
 static ExprResult expression(Parser *parser)
 {
-    return equality(parser);
+    return assignment(parser);
+}
+
+static ExprResult assignment(Parser *parser)
+{
+    Expr *expr = check_result(equality(parser));
+
+    if (match(parser, TOKEN_EQUAL))
+    {
+        Token equals = previous(parser);
+        Expr *value = check_result(assignment(parser));
+
+        if (expr->type == EXPR_VARIABLE)
+        {
+            Token name = ((VariableExpr *)expr)->name;
+            return ok(new_assign_expr(name, value));
+        }
+
+        parse_error(equals, "Invalid assignment target.");
+        return EXPR_ERROR;
+    }
+
+    return ok(expr);
 }
 
 static ExprResult equality(Parser *parser)

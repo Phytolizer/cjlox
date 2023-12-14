@@ -14,15 +14,30 @@ void environment_define(Environment *environment, sds name, Object *value)
     shput(environment->values, name, value);
 }
 
-GetResult environment_get(Environment *environment, Token name)
+EnvironmentResult environment_get(Environment *environment, Token name)
 {
     EnvironmentEntry *entry = shgetp(environment->values, name.lexeme);
     if (entry != NULL)
     {
-        return (GetResult){.value = entry->value};
+        return (EnvironmentResult){.value = entry->value};
     }
 
-    return (GetResult){
+    return (EnvironmentResult){
+        .token = name,
+        .err_msg = sdscatfmt(sdsempty(), "Undefined variable '%s'.", name.lexeme),
+    };
+}
+
+EnvironmentResult environment_assign(Environment *environment, Token name, Object *value)
+{
+    EnvironmentEntry *entry = shgetp(environment->values, name.lexeme);
+    if (entry != NULL)
+    {
+        entry->value = value;
+        return (EnvironmentResult){.value = value};
+    }
+
+    return (EnvironmentResult){
         .token = name,
         .err_msg = sdscatfmt(sdsempty(), "Undefined variable '%s'.", name.lexeme),
     };

@@ -220,6 +220,7 @@ int main(int argc, char *argv[])
 
     define_ast(output_dir, "Expr", "#include \"token.h\"\n",
                (char const *[]){
+                   "Assign   : Token name, Expr * value",
                    "Binary   : Expr * left, Token operator, Expr * right",
                    "Grouping : Expr * expression",
                    "Literal  : Object * value",

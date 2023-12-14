@@ -129,6 +129,28 @@ static RuntimeResult *execute(Interpreter *interpreter, Stmt *stmt)
         result->value;                                                                                                 \
     })
 
+#define check_env(call)                                                                                                \
+    ({                                                                                                                 \
+        EnvironmentResult result = call;                                                                               \
+        if (result.err_msg != NULL)                                                                                    \
+        {                                                                                                              \
+            RuntimeResult *runtime_result = malloc(sizeof(RuntimeResult));                                             \
+            runtime_result->was_error = true;                                                                          \
+            runtime_result->token = result.token;                                                                      \
+            runtime_result->message = result.err_msg;                                                                  \
+            return runtime_result;                                                                                     \
+        }                                                                                                              \
+        result.value;                                                                                                  \
+    })
+
+static void *visit_assign_expr(ExprVisitor *visitor, void *data, AssignExpr *expr)
+{
+    Interpreter *interpreter = data;
+    Object *value = evaluate(interpreter, expr->value);
+    check_env(environment_assign(&interpreter->environment, expr->name, value));
+    return ok(value);
+}
+
 static void *visit_binary_expr(ExprVisitor *visitor, void *data, BinaryExpr *expr)
 {
     Interpreter *interpreter = data;
@@ -215,16 +237,8 @@ static void *visit_unary_expr(ExprVisitor *visitor, void *data, UnaryExpr *expr)
 static void *visit_variable_expr(ExprVisitor *visitor, void *data, VariableExpr *expr)
 {
     Interpreter *interpreter = data;
-    GetResult gotten = environment_get(&interpreter->environment, expr->name);
-    if (gotten.err_msg != NULL)
-    {
-        RuntimeResult *result = malloc(sizeof(RuntimeResult));
-        result->was_error = true;
-        result->token = gotten.token;
-        result->message = gotten.err_msg;
-        return result;
-    }
-    return ok(gotten.value);
+    Object *value = check_env(environment_get(&interpreter->environment, expr->name));
+    return ok(value);
 }
 
 static void *visit_print_stmt(StmtVisitor *visitor, void *data, PrintStmt *stmt)
@@ -260,6 +274,7 @@ Interpreter new_interpreter(void)
     Interpreter interpreter = {
         .expr =
             {
+                .visit_assign_expr = visit_assign_expr,
                 .visit_binary_expr = visit_binary_expr,
                 .visit_grouping_expr = visit_grouping_expr,
                 .visit_literal_expr = visit_literal_expr,
